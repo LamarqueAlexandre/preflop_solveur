@@ -6,6 +6,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from engine.cards import N_CLASSES, parse_class
+from engine.equity import EquityTensors, compute_equity_tensors, compute_weights, storage
 from engine.equity.storage import (
     FORMAT_VERSION,
     FormatError,
@@ -13,9 +16,6 @@ from engine.equity.storage import (
     load_tensors,
     save_tensors,
 )
-
-from engine.cards import N_CLASSES, parse_class
-from engine.equity import EquityTensors, compute_equity_tensors, compute_weights, storage
 
 SEED = 20261126
 CLASSES = tuple(parse_class(name) for name in ("AA", "KK", "AKs", "72o"))

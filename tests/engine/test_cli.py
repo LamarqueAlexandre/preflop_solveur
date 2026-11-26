@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from engine.cli import main
-from engine.equity.storage import load_tensors
 
 from engine.cards import parse_class
+from engine.cli import main
+from engine.equity.storage import load_tensors
 
 
 def test_equity_build_on_a_subset(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
