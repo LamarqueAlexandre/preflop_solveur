@@ -177,7 +177,10 @@ En tant que développeur et utilisateur, je lance un batch qui calcule toutes le
 ### Résultats mesurables
 
 - **SC-001** : 100 % des solutions publiées dans la bibliothèque ont une exploitabilité inférieure à 0,5 % du pot de départ.
-- **SC-002** : En configuration push/fold pur, les ranges calculées correspondent à des charts de Nash push/fold 3-max de référence, avec moins de 2 % d'écart en fréquence de push sur l'ensemble des mains, pour au moins trois profondeurs testées.
+- **SC-002** : En configuration push/fold pur, la solution est validée de trois façons (aucune chart de Nash push/fold 3-max chipEV n'étant disponible, voir décision D-004) :
+  1. **Sous-cas heads-up** : le BTN étant forcé à folder, les ranges de la SB et de la BB correspondent aux charts de Nash push/fold heads-up chipEV publiées, avec moins de 2 % d'écart en fréquence, pour au moins trois profondeurs testées.
+  2. **Implémentation indépendante** : les ranges du solveur et celles d'un *fictitious play* écrit séparément sur l'arbre push/fold 3-max diffèrent de moins de 2 % en fréquence de push sur l'ensemble des mains, pour au moins trois profondeurs testées.
+  3. **Certificat d'équilibre** : l'exploitabilité (NashConv) est inférieure à 0,5 % du pot de départ.
 - **SC-003** : Les équités à trois mains du moteur diffèrent de moins de 0,1 point de pourcentage de l'énumération exhaustive sur un échantillon d'au moins 1 000 confrontations.
 - **SC-004** : L'affichage de la grille d'un nœud prend moins d'une seconde après la sélection.
 - **SC-005** : Une meilleure réponse est calculée et affichée en moins de 5 secondes.
@@ -198,3 +201,4 @@ En tant que développeur et utilisateur, je lance un batch qui calcule toutes le
 - Q : Le BTN peut-il open-limper ? → R : Oui, à toutes les profondeurs, avec relance d'isolation pour les joueurs suivants (FR-004, FR-005).
 - Q : Granularité du profil de réalisation ? → R : position × type de pot × nombre de joueurs au flop × tranche de profondeur au MVP ; dimension « catégorie de main » reportée en V2, sa priorité étant décidée par un test de sensibilité (FR-007, FR-008, FR-008a, SC-009).
 - Q : Machine de calcul de la bibliothèque ? → R : hypothèse retenue : PC de développement, à confirmer au premier benchmark (SC-006).
+- Q : Quelle référence pour valider le push/fold, faute de chart de Nash 3-max chipEV ? → R : sous-cas heads-up comparé aux charts publiées, implémentation indépendante par *fictitious play* et certificat d'exploitabilité (SC-002 révisé, décision D-004 du plan).
