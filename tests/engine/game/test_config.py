@@ -156,7 +156,7 @@ def test_default_grid_never_needs_the_conversion() -> None:
 
 
 def test_stack_grid_is_3_to_25bb_by_1bb() -> None:
-    assert STACK_GRID == tuple(float(s) for s in range(3, 26))
+    assert tuple(float(s) for s in range(3, 26)) == STACK_GRID
     assert len(STACK_GRID) == 23
 
 
