@@ -114,22 +114,16 @@ def test_suits_never_break_ties() -> None:
 
 
 def test_two_trips_make_a_full_house() -> None:
-    assert evaluate(cards("9h 9d 9c 4s 4h 4d 2c")) == HandRank(
-        HandCategory.FULL_HOUSE, ranks("94")
-    )
+    assert evaluate(cards("9h 9d 9c 4s 4h 4d 2c")) == HandRank(HandCategory.FULL_HOUSE, ranks("94"))
 
 
 def test_three_pairs_keep_the_best_two_and_best_kicker() -> None:
     # Pairs K, 8, 5 and a 3: the third pair's 5 is the kicker.
-    assert evaluate(cards("Kh Kd 8c 8s 5h 5d 3c")) == HandRank(
-        HandCategory.TWO_PAIR, ranks("K85")
-    )
+    assert evaluate(cards("Kh Kd 8c 8s 5h 5d 3c")) == HandRank(HandCategory.TWO_PAIR, ranks("K85"))
 
 
 def test_six_suited_cards_keep_the_five_best() -> None:
-    assert evaluate(cards("Ah Kh 9h 7h 4h 2h Qd")) == HandRank(
-        HandCategory.FLUSH, ranks("AK974")
-    )
+    assert evaluate(cards("Ah Kh 9h 7h 4h 2h Qd")) == HandRank(HandCategory.FLUSH, ranks("AK974"))
 
 
 def test_six_card_run_keeps_the_highest_straight() -> None:
@@ -142,9 +136,7 @@ def test_wheel_with_a_six_plays_the_six_high_straight() -> None:
 
 def test_straight_and_flush_without_straight_flush_is_a_flush() -> None:
     # Straight 5-9 and five hearts, but the hearts are not consecutive.
-    assert evaluate(cards("5h 6h 7d 8h 9c Kh 2h")) == HandRank(
-        HandCategory.FLUSH, ranks("K8652")
-    )
+    assert evaluate(cards("5h 6h 7d 8h 9c Kh 2h")) == HandRank(HandCategory.FLUSH, ranks("K8652"))
 
 
 def test_quads_take_the_best_remaining_kicker() -> None:
