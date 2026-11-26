@@ -5,7 +5,7 @@ Voir [docs/spec.md](docs/spec.md) et [docs/plan.md](docs/plan.md).
 
 ## Installation
 
-Prérequis : [uv](https://docs.astral.sh/uv/).
+Prérequis : [uv](https://docs.astral.sh/uv/). Installation complète d'un nouveau poste (Git, GitHub CLI, clé SSH, VS Code, Claude Code) : [docs/installation-poste.md](docs/installation-poste.md).
 
 ```bash
 uv sync
