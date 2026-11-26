@@ -103,7 +103,7 @@ def test_three_way_symmetries() -> None:
     # Player a facing b and c does not care about the order of b and c.
     np.testing.assert_array_equal(sub[feasible], sub.transpose(0, 2, 1)[feasible])
     # The three players' shares sum to one.
-    total = sub + sub.transpose(1, 0, 2) + sub.transpose(2, 0, 1)
+    total = sub + sub.transpose(1, 0, 2) + sub.transpose(1, 2, 0)
     np.testing.assert_allclose(total[feasible], 1.0, atol=1e-6)
 
 
