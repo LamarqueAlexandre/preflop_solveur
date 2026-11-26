@@ -70,6 +70,11 @@ uv run mypy engine/          # typage du moteur
 
 (Commandes du front à ajouter une fois le framework choisi.)
 
+### Poste de travail
+
+- Le projet est développé sur plusieurs PC Windows. Installation d'un nouveau poste : [docs/installation-poste.md](../docs/installation-poste.md).
+- GitHub CLI (`gh`) est installé dans `C:\Program Files\GitHub CLI`. Si le shell ne le trouve pas (VS Code non redémarré depuis l'installation), ajoute ce dossier au `PATH` de la commande.
+
 ## Git
 
 - Ne JAMAIS committer directement sur `main` ni sur `dev`.
@@ -79,6 +84,9 @@ uv run mypy engine/          # typage du moteur
 - Les PR ciblent toujours `dev` (`gh pr create --base dev`).
 - Ne JAMAIS merger une PR, ni `dev` dans `main`, sans mon accord explicite.
 - Messages de commit en français : `type(portée): description`.
+- GitHub supprime automatiquement la branche distante au merge d'une PR. Au début de chaque issue, supprime aussi les branches **locales** déjà mergées (`git fetch --prune`, puis `git branch -d <branche>`).
+- `main` et `dev` sont protégées contre la suppression (ruleset GitHub).
+- `dev` est mergée dans `main` **à la fin de chaque lot**, par une PR `dev` → `main` qui ferme les issues du lot (`Closes #n`). Méthode de merge : « Create a merge commit », jamais squash ni rebase, pour que `dev` et `main` gardent le même historique.
 
 ## Règles propres au poker
 
