@@ -25,9 +25,7 @@ def brute_force(h1: int, h2: int, h3: int) -> int:
     """Independent reference: try every combo triplet and keep card-disjoint ones."""
     hands = [[set(COMBOS[c].tolist()) for c in combos_of_class(h)] for h in (h1, h2, h3)]
     return sum(
-        1
-        for a, b, c in product(*hands)
-        if a.isdisjoint(b) and a.isdisjoint(c) and b.isdisjoint(c)
+        1 for a, b, c in product(*hands) if a.isdisjoint(b) and a.isdisjoint(c) and b.isdisjoint(c)
     )
 
 
