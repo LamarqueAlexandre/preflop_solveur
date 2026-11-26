@@ -3,7 +3,7 @@
 **Branche** : `001-solveur-preflop-expresso`
 **Créé le** : 2026-11-26
 **Statut** : Validé
-**Entrées** : [constitution.md](constitution.md) v1.0.0, [spec.md](spec.md)
+**Entrées** : [constitution.md](constitution.md) v1.0.1, [spec.md](spec.md)
 
 ---
 
@@ -201,7 +201,7 @@ Une action dont la fréquence d'équilibre est non nulle compte comme correcte (
 | 5 | Discounted CFR et exploitabilité, **push/fold d'abord** | FR-009, 010 | SC-002 révisé (D-004) |
 | 6 | Arbre complet, EV / reach par nœud, empreinte, store, batch | FR-011 à 013, US5 | SC-001, SC-006 (benchmark) |
 | 7 | Meilleure réponse, comparaison, test de sensibilité | FR-014 à 016, 008a | SC-005, SC-007, SC-009 |
-| 8 | API | US1 à US4 | tests API |
+| 8 | `engine/training` (D-009), puis API | US1 à US4 | TDD pour `engine/training`, tests API |
 | 9 | Front : grille et résumé → navigation → éditeur et comparaison → entraînement | FR-019 à 025 | tests de composants, SC-004, SC-008 |
 
 Le batch du lot 6 peut tourner pendant le développement des lots 7 à 9.
@@ -218,7 +218,7 @@ Le batch du lot 6 peut tourner pendant le développement des lots 7 à 9.
 
 ## 9. Décisions prises lors du plan
 
-Ces décisions seront reportées dans `docs/decisions.md` au lot 0.
+Ces décisions sont consignées, avec leur contexte et les alternatives écartées, dans le journal [decisions.md](decisions.md), qui fait foi. Les décisions suivantes (D-009 et au-delà) n'y figurent que là.
 
 - **D-001 — Mesure d'exploitabilité** : NashConv (somme des gains de meilleure réponse des trois joueurs), en % du pot de départ (1,5bb). Seuil de publication : 0,5 %.
 - **D-002 — Normalisation de la réalisation** : la part de pot d'un joueur vaut `Rᵢ·eqᵢ / Σⱼ Rⱼ·eqⱼ`, pour que le pot soit toujours entièrement redistribué.

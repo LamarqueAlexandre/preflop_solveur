@@ -23,7 +23,10 @@ Une solution est identifiée de manière unique par l'empreinte (hash) de sa con
 
 ### V. Validation contre des références connues
 - Les équités à 3 mains sont vérifiées par énumération exhaustive sur un échantillon.
-- Les solutions en push/fold pur sont comparées à des charts de Nash push/fold 3-max publiées.
+- Les solutions en push/fold pur sont validées de trois façons, faute de chart de Nash push/fold 3-max chipEV publiée (décision D-004) :
+  - sous-cas heads-up (BTN forcé à folder) comparé aux charts de Nash push/fold heads-up chipEV publiées ;
+  - comparaison à une implémentation indépendante (*fictitious play*) sur l'arbre push/fold 3-max ;
+  - certificat d'équilibre : exploitabilité sous le seuil de publication.
 - L'exploitabilité est calculée et stockée à chaque résolution. Une solution qui ne respecte pas le seuil n'est pas publiée dans la bibliothèque.
 
 ### VI. Performance mesurée, pas supposée
@@ -46,10 +49,17 @@ Le MVP est mono-utilisateur, sans authentification. Mais on évite ce qui bloque
 - Chaque fonctionnalité suit le cycle spec-kit : `specify` → `clarify` → `plan` → `tasks` → `implement`.
 - Les tests du moteur sont écrits avant l'implémentation des règles de jeu et des calculs d'équité (principe I).
 - Aucune solution n'entre dans la bibliothèque sans son rapport d'exploitabilité (principe V).
-- Les décisions qui modifient le modèle de jeu (nouveau sizing, nouvelle règle, nouveau profil de réalisation) sont consignées dans un journal de décisions.
+- Les décisions qui modifient le modèle de jeu (nouveau sizing, nouvelle règle, nouveau profil de réalisation) sont consignées dans le journal de décisions ([decisions.md](decisions.md)).
 
 ## Gouvernance
 
 Cette constitution prévaut sur les autres pratiques du projet. Toute modification est datée, justifiée et versionnée (versionnage sémantique : MAJEUR si un principe est retiré ou redéfini, MINEUR si un principe est ajouté, PATCH pour les clarifications). Les plans et les tâches doivent vérifier leur conformité aux principes I à VII.
 
-**Version** : 1.0.0 | **Ratifiée** : 2026-11-26 | **Dernière modification** : 2026-11-26
+**Version** : 1.0.1 | **Ratifiée** : 2026-11-26 | **Dernière modification** : 2026-11-26
+
+### Historique des modifications
+
+| Version | Date | Modification | Justification |
+|---|---|---|---|
+| 1.0.1 (PATCH) | 2026-11-26 | Principe V : la comparaison à des charts push/fold 3-max publiées est remplacée par les trois validations de D-004. | Aucune chart de Nash push/fold 3-max chipEV n'est disponible. L'esprit du principe (valider contre des références connues) est inchangé ; seule une référence inexistante est corrigée. |
+| 1.0.0 | 2026-11-26 | Ratification. | — |

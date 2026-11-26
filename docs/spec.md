@@ -2,7 +2,7 @@
 
 **Branche** : `001-solveur-preflop-expresso`
 **Créée le** : 2026-11-26
-**Statut** : Brouillon
+**Statut** : Validée
 **Demande initiale** : « Un solveur préflop de poker à 3 joueurs pour le format Expresso, avec une interface graphique inspirée de GTO Wizard, qui me permet d'étudier les stratégies d'équilibre et de construire des ranges exploitantes en fonction de la range de vilain. »
 
 ---
@@ -181,7 +181,7 @@ En tant que développeur et utilisateur, je lance un batch qui calcule toutes le
   1. **Sous-cas heads-up** : le BTN étant forcé à folder, les ranges de la SB et de la BB correspondent aux charts de Nash push/fold heads-up chipEV publiées, avec moins de 2 % d'écart en fréquence, pour au moins trois profondeurs testées.
   2. **Implémentation indépendante** : les ranges du solveur et celles d'un *fictitious play* écrit séparément sur l'arbre push/fold 3-max diffèrent de moins de 2 % en fréquence de push sur l'ensemble des mains, pour au moins trois profondeurs testées.
   3. **Certificat d'équilibre** : l'exploitabilité (NashConv) est inférieure à 0,5 % du pot de départ.
-- **SC-003** : Les équités à trois mains du moteur diffèrent de moins de 0,1 point de pourcentage de l'énumération exhaustive sur un échantillon d'au moins 1 000 confrontations.
+- **SC-003** : Sur un échantillon d'au moins 1 000 confrontations à trois mains (triplets de classes), les équités du moteur diffèrent de l'énumération exhaustive de moins de 0,1 point de pourcentage **en moyenne** et de moins de 0,3 point **au maximum** (voir décision D-003).
 - **SC-004** : L'affichage de la grille d'un nœud prend moins d'une seconde après la sélection.
 - **SC-005** : Une meilleure réponse est calculée et affichée en moins de 5 secondes.
 - **SC-006** : La génération de la bibliothèque complète (23 solutions) tient en une nuit (moins de 10 heures) sur le PC de développement. La configuration exacte de la machine est relevée lors du premier benchmark.
@@ -202,3 +202,4 @@ En tant que développeur et utilisateur, je lance un batch qui calcule toutes le
 - Q : Granularité du profil de réalisation ? → R : position × type de pot × nombre de joueurs au flop × tranche de profondeur au MVP ; dimension « catégorie de main » reportée en V2, sa priorité étant décidée par un test de sensibilité (FR-007, FR-008, FR-008a, SC-009).
 - Q : Machine de calcul de la bibliothèque ? → R : hypothèse retenue : PC de développement, à confirmer au premier benchmark (SC-006).
 - Q : Quelle référence pour valider le push/fold, faute de chart de Nash 3-max chipEV ? → R : sous-cas heads-up comparé aux charts publiées, implémentation indépendante par *fictitious play* et certificat d'exploitabilité (SC-002 révisé, décision D-004 du plan).
+- Q : SC-003 vise-t-il un écart moyen ou maximal ? → R : les deux : écart moyen < 0,1 point et écart maximal < 0,3 point (SC-003 révisé, décision D-003).
