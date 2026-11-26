@@ -21,14 +21,14 @@ Le plan (§ 3.2) estimait ce calcul à **environ 1 heure**. Ce spike mesure le c
 | Processeur | Intel Core i5-13420H, 8 cœurs, 12 threads |
 | Mémoire | 16 Go |
 | Système | Windows 11 |
-| Logiciels | Python 3.12.10, NumPy 2.5.5, Numba 0.68.1 (temporaire, hors projet) |
+| Logiciels | Python 3.12.10, NumPy 2.5.5, Numba 0.68.1 |
 
 ```bash
-uv run python benchmarks/spike_equity.py                       # partie NumPy (~1 min 30)
-uv run --with numba python benchmarks/spike_equity_numba.py    # partie Numba (~1 min 15)
+uv run python benchmarks/spike_equity.py          # partie NumPy (~1 min 30)
+uv run python benchmarks/spike_equity_numba.py    # partie Numba (~1 min 15)
 ```
 
-Les deux scripts utilisent la graine `20261126`. Numba n'est **pas** ajouté au projet : `uv run --with numba` l'installe dans un environnement jetable.
+Les deux scripts utilisent la graine `20261126`. Les mesures Numba ont d'abord été faites dans un environnement jetable (`uv run --with numba`). Numba a ensuite été ajouté au projet, après validation de D-010.
 
 ## 3. Un peu de théorie
 
@@ -125,7 +125,7 @@ Hypothèses : 818 532 trios réalisables, 450 000 tirages par trio, 16,5 configu
 
 ## 6. Recommandation
 
-1. **Ajouter Numba** comme dépendance d'exécution du moteur (`numba`, qui entraîne `llvmlite`). Le gain est mesuré : ×41 sur un thread, ×320 avec 12 threads. C'est la seule option mesurée qui fait tenir le tenseur complet dans une nuit. Cette dépendance est à valider (décision D-010) et sera ajoutée dans l'issue qui l'utilise en premier, pas dans ce spike.
+1. **Ajouter Numba** comme dépendance d'exécution du moteur (`numba`, qui entraîne `llvmlite`). Le gain est mesuré : ×41 sur un thread, ×320 avec 12 threads. C'est la seule option mesurée qui fait tenir le tenseur complet dans une nuit. Décision D-010, validée : Numba est ajouté au projet dès cette issue.
 2. **Monte-Carlo simple**, uniforme sur les trios de combos compatibles, avec **450 000 tirages par trio**. On abandonne la stratification par couleurs, qui n'apporte rien (§ 3.3).
 3. **Énumération de référence (#10)** : avec l'évaluateur rapide en Numba et la réduction par symétries de couleurs (§ 3.4), parallélisée par trio.
 4. **Temps de construction attendu** : environ 4 à 5 h sur cette machine, au lieu de l'heure prévue au plan.

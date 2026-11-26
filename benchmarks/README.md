@@ -19,8 +19,8 @@ Le benchmark tire 1 000 000 de mains de 7 cartes aléatoires (graine `20261126`)
 Issue #8. L'analyse complète se trouve dans [docs/notes/spike-equites.md](../docs/notes/spike-equites.md).
 
 ```bash
-uv run python benchmarks/spike_equity.py                       # partie NumPy
-uv run --with numba python benchmarks/spike_equity_numba.py    # partie Numba, environnement jetable
+uv run python benchmarks/spike_equity.py          # partie NumPy
+uv run python benchmarks/spike_equity_numba.py    # partie Numba
 ```
 
 | Date | Machine | Mesure | NumPy | Numba, 1 thread | Numba, 12 threads |

@@ -1,9 +1,10 @@
 """Spike #8 (Numba part): same measures with a Numba prototype of the fast evaluator.
 
-Numba is NOT a project dependency (constitution, principle VI): this script is a
-measurement only. Run it in a throw-away environment:
+Measurement only; the prototype is not part of the engine. Numba is a project
+dependency since decision D-010 (it was first measured in a throw-away
+environment with ``uv run --with numba``). Run:
 
-    uv run --with numba python benchmarks/spike_equity_numba.py
+    uv run python benchmarks/spike_equity_numba.py
 
 The prototype reuses the 8192-entry tables of ``engine.evaluator.fast`` and is
 first checked against ``evaluate_batch`` on random hands.

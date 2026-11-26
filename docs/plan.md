@@ -210,7 +210,7 @@ Le batch du lot 6 peut tourner pendant le développement des lots 7 à 9.
 
 ## 8. Dépendances validées
 
-- **Python (runtime)** : `numpy`, `fastapi`, `uvicorn`, `pydantic`. `numba` (justifié par le spike du lot 2, décision D-010 ; ajouté à l'issue #10).
+- **Python (runtime)** : `numpy`, `fastapi`, `uvicorn`, `pydantic`. `numba` (justifié par le spike du lot 2, décision D-010 ; ajouté à l'issue #8).
 - **Python (dev)** : `pytest`, `pytest-benchmark`, `hypothesis`, `httpx`, `ruff`, `mypy`.
 - **Front** : `react`, `react-dom`, `react-router`, `@tanstack/react-query`, `tailwindcss`, `vite`, `typescript`, `vitest`, `@testing-library/react`, `jsdom`, `openapi-typescript`.
 
