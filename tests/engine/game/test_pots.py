@@ -1,5 +1,7 @@
 """Tests for the n-player pot resolver (main pot and side pots)."""
 
+from itertools import pairwise
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -95,7 +97,7 @@ def test_eligible_players_are_live_and_shrink(situation: tuple[list[float], list
     for pot in pots:
         assert pot.eligible
         assert pot.eligible <= live
-    for earlier, later in zip(pots, pots[1:], strict=False):
+    for earlier, later in pairwise(pots):
         assert later.eligible < earlier.eligible
 
 
