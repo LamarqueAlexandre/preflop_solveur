@@ -9,6 +9,9 @@ dependencies = [
     "numpy",
 ]
 
+[project.scripts]
+engine = "engine.cli:main"
+
 [dependency-groups]
 dev = [
     "hypothesis",
