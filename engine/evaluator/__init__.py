@@ -1,6 +1,7 @@
-"""Hand evaluators: a naive reference and a fast vectorised one."""
+"""Hand evaluators: a naive reference, a fast vectorised one and its Numba twin."""
 
 from engine.evaluator.fast import category_of, evaluate_batch
+from engine.evaluator.kernel import evaluate_batch_numba
 from engine.evaluator.reference import (
     HandCategory,
     HandRank,
@@ -18,5 +19,6 @@ __all__ = [
     "encode_rank",
     "evaluate",
     "evaluate_batch",
+    "evaluate_batch_numba",
     "evaluate_five",
 ]

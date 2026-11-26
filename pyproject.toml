@@ -38,6 +38,14 @@ select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF"]
 python_version = "3.12"
 strict = true
 
+# Numba kernels (decision D-010): compiled code works on untyped scalars and
+# arrays. Only these modules are relaxed; their Python entry points stay typed.
+[[tool.mypy.overrides]]
+module = ["engine.evaluator.kernel", "engine.equity._kernels"]
+warn_return_any = false
+disallow_untyped_defs = false
+disallow_untyped_decorators = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "-m", "not slow"]
