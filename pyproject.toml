@@ -39,4 +39,7 @@ strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["--import-mode=importlib"]
+addopts = ["--import-mode=importlib", "--strict-markers", "-m", "not slow"]
+markers = [
+    "slow: long exhaustive checks, excluded by default (run with `uv run pytest -m slow`)",
+]
