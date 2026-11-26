@@ -66,10 +66,10 @@ Pour chaque triplet ordonné de classes (h₁, h₂, h₃), on précalcule une f
 
 **Pots annexes.** Par linéarité de l'espérance, l'EV d'un joueur s'écrit `pot_principal × E₃ᵢ + pot_annexe_jk × E₂(j vs k | i mort)`. Ces tenseurs suffisent donc à traiter exactement les pots annexes, et donc les stacks inégaux de la V2, sans nouveau précalcul.
 
-**Calcul.** Une seule passe : chaque board évalué donne en même temps le résultat à 3 mains et les trois résultats à 2 mains. Méthode : Monte-Carlo stratifié par motif de couleurs, avec un nombre de tirages calibré pour respecter SC-003. Le temps de calcul attendu est d'environ une heure, à confirmer par le spike du lot 2.
+**Calcul** (décision D-010, spike [notes/spike-equites.md](notes/spike-equites.md)). Une seule passe : chaque board évalué donne en même temps le résultat à 3 mains et les trois résultats à 2 mains. Méthode : Monte-Carlo simple, avec 450 000 tirages par trio pour respecter SC-003. Le calcul est parallélisé par trio, avec une graine par trio. Le temps de calcul attendu est de 4 à 5 h, avec Numba, sur la machine de développement.
 
 **Évaluateurs.**
-- Évaluateur rapide, avec Numba si le spike le justifie (principe VI).
+- Évaluateur rapide vectorisé en NumPy (`evaluate_batch`), et un noyau Numba testé contre lui pour le calcul des tenseurs (D-010).
 - Évaluateur de référence naïf, lent et lisible (meilleure combinaison de 5 cartes parmi 7), testé sur des cas écrits à la main. Il sert de référence indépendante à l'évaluateur rapide.
 
 **Critère SC-003 retenu** (décision D-003) : sur au moins 1 000 triplets de classes, comparés à l'énumération exhaustive, l'écart **moyen** est < 0,1 point et l'écart **maximal** < 0,3 point.
@@ -210,7 +210,7 @@ Le batch du lot 6 peut tourner pendant le développement des lots 7 à 9.
 
 ## 8. Dépendances validées
 
-- **Python (runtime)** : `numpy`, `fastapi`, `uvicorn`, `pydantic`. `numba` uniquement si le spike du lot 2 le justifie par une mesure.
+- **Python (runtime)** : `numpy`, `fastapi`, `uvicorn`, `pydantic`. `numba` (justifié par le spike du lot 2, décision D-010 ; ajouté à l'issue #10).
 - **Python (dev)** : `pytest`, `pytest-benchmark`, `hypothesis`, `httpx`, `ruff`, `mypy`.
 - **Front** : `react`, `react-dom`, `react-router`, `@tanstack/react-query`, `tailwindcss`, `vite`, `typescript`, `vitest`, `@testing-library/react`, `jsdom`, `openapi-typescript`.
 

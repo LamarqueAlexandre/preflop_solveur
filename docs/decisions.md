@@ -4,7 +4,7 @@ Ce journal consigne les décisions qui touchent le modèle de jeu, la validation
 
 **Format** : contexte → décision → alternatives écartées → conséquences.
 
-**Statuts** : *Acceptée*, *Remplacée par D-xxx*, *Abandonnée*.
+**Statuts** : *Proposée* (en attente de validation dans une PR), *Acceptée*, *Remplacée par D-xxx*, *Abandonnée*.
 
 > **Note** : les alternatives écartées de D-001 à D-008 ont été reconstituées a posteriori lors de la rédaction de ce journal (le plan ne les listait pas). Elles sont à relire.
 
@@ -155,3 +155,31 @@ Ce journal consigne les décisions qui touchent le modèle de jeu, la validation
 - *Dans l'API* : interdit par le principe IV (logique de poker).
 
 **Conséquences.** Issue #33, avant #34. Plan § 7 mis à jour.
+
+---
+
+## D-010 — Calcul des tenseurs d'équité : Numba et Monte-Carlo simple
+
+- **Date** : 2026-11-26 · **Statut** : Proposée (PR de l'issue #8, passe à *Acceptée* après validation) · **Liens** : FR-006, SC-003, D-003, constitution principe VI
+
+**Contexte.** Le plan (§ 3.2) prévoyait un Monte-Carlo stratifié par motif de couleurs, d'environ 1 h de calcul, et Numba « seulement si le spike le justifie ». Le spike #8 ([notes/spike-equites.md](notes/spike-equites.md)) a mesuré :
+- **Nombre de tirages** : pour respecter D-003, il faut environ **450 000 tirages par trio**. C'est le critère d'écart maximal < 0,3 point sur 3 000 valeurs qui l'impose.
+- **Temps de calcul** : en NumPy, environ **1 390 h** pour les 818 532 trios réalisables. Avec un prototype Numba sur 12 threads, environ **4,3 h**, soit 320 fois plus rapide.
+- **Stratification par couleurs** : aucun gain (variance ×1,002). L'incertitude vient presque entièrement du board.
+- **Référence exhaustive (#10)** sur 1 000 trios, avec réduction par symétries de couleurs : environ 10 h en NumPy, environ 23 min avec Numba sur un seul thread.
+
+Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h).
+
+**Décision.**
+1. `numba` devient une dépendance d'exécution du moteur. Elle est ajoutée dans la première issue qui l'utilise (#10).
+2. E₃ et E₂ sont calculés par un Monte-Carlo **simple** : trio de combos compatibles tiré uniformément, puis board tiré uniformément. On fait 450 000 tirages par trio, dans une seule passe qui donne E₃ et E₂ en même temps. Le calcul est parallélisé par trio, chaque trio ayant sa propre graine dérivée de la graine globale (principe III).
+3. L'énumération de référence (#10) utilise l'évaluateur rapide (noyau Numba) et la réduction par symétries de couleurs.
+4. Le noyau Numba est une seconde implémentation de `evaluate_batch`, testée contre lui. `evaluate_batch` reste dans le moteur.
+
+**Alternatives écartées.**
+- *Pur NumPy* : 58 jours de calcul, ou une erreur d'environ 0,9 point si l'on se limite à une nuit. Incompatible avec D-003.
+- *Monte-Carlo stratifié par couleurs* : gain mesuré nul, pour une complexité supplémentaire.
+- *Tenseur entièrement exact (énumération)* : environ 40 h estimées avec Numba. Hors du budget d'une nuit, et inutile pour D-003. Option à rouvrir plus tard si besoin.
+- *Table de type Two Plus Two (130 Mo)* : non mesurée. Numba suffit à tenir le budget, sans fichier de données supplémentaire.
+
+**Conséquences.** Le temps de construction attendu passe d'environ 1 h à **4 à 5 h** sur la machine de développement. Le plan § 3.2 et § 8 est mis à jour. Les issues #10, #11 et #12 suivent cette méthode.
