@@ -40,8 +40,10 @@ def fast_value(hand: list[int]) -> int:
 
 
 def test_encode_rank_packs_category_then_kickers() -> None:
-    # Full house K-K-K-4-4: 6 * 16**5 + 11 * 16**4 + 2 * 16**3.
-    assert encode_rank(HandRank(HandCategory.FULL_HOUSE, ranks("K4"))) == 7_012_352
+    # Full house K-K-K-4-4: 6 * 16**5 + 11 * 16**4 + 2 * 16**3 = 7_020_544.
+    expected = 6 * 16**5 + 11 * 16**4 + 2 * 16**3
+    assert expected == 7_020_544
+    assert encode_rank(HandRank(HandCategory.FULL_HOUSE, ranks("K4"))) == expected
 
 
 def test_encode_rank_of_a_wheel() -> None:
@@ -68,7 +70,7 @@ ORDERED_RANKS = [
 
 
 def test_encode_rank_preserves_order() -> None:
-    assert ORDERED_RANKS == sorted(ORDERED_RANKS)
+    assert sorted(ORDERED_RANKS) == ORDERED_RANKS
     encoded = [encode_rank(rank) for rank in ORDERED_RANKS]
     assert encoded == sorted(encoded)
     assert len(set(encoded)) == len(encoded)
