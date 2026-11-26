@@ -76,6 +76,17 @@ uv run mypy engine/
 
 Les trois vérifications doivent être vertes.
 
+### Construire les tenseurs d'équité (une fois par PC)
+
+Les tenseurs d'équité (environ 57 Mo) ne sont pas dans git : ils se régénèrent. Lance une fois :
+
+```powershell
+uv run engine equity build    # environ 4 à 5 h, le PC tourne à 100 % : idéal pendant la nuit
+uv run engine equity info     # vérifie le résultat (manifeste et sommes de contrôle)
+```
+
+Avec la même graine (celle par défaut), chaque PC obtient exactement les mêmes tenseurs. Tu peux aussi copier le dossier `data/equity/` d'un PC à l'autre : `engine equity info` vérifie qu'il est intact.
+
 ## 6. VS Code et l'extension Claude
 
 1. Ouvre VS Code, puis **File → Open Folder** → le dossier `preflop_solveur`.
@@ -94,6 +105,7 @@ Les trois vérifications doivent être vertes.
 | Conversations avec Claude | sur chaque PC | ❌ Claude repart de zéro. Le contexte vit dans les issues, les PR et `docs/`, donc rien d'important n'est perdu. |
 | Mémoire automatique de Claude | sur chaque PC | ❌ les habitudes importantes sont inscrites dans `.claude/CLAUDE.md` |
 | Permissions accordées à Claude (`.claude/settings.local.json`) | volontairement hors git | ❌ tu les réaccordes au fil des demandes |
+| Tenseurs d'équité (`data/equity/`) | sur chaque PC, hors git | ❌ à reconstruire (`uv run engine equity build`) ou à copier |
 
 ## La règle d'or quand on travaille sur deux PC
 

@@ -74,7 +74,7 @@ Pour chaque triplet ordonné de classes (h₁, h₂, h₃), on précalcule une f
 
 **Critère SC-003 retenu** (décision D-003) : sur au moins 1 000 triplets de classes, comparés à l'énumération exhaustive, l'écart **moyen** est < 0,1 point et l'écart **maximal** < 0,3 point.
 
-**Stockage.** Environ 135 Mo en float32 dans `data/`, régénérables par `engine equity build`.
+**Stockage.** Dossier `data/equity/` (hors git), régénérable par `engine equity build` : `w.npy` (int32), `e3.npy` et `e2.npy` (float32, format compact 169³ : `e3[a,b,c]` = équité de a face à b et c, `e2[a,b,c]` = a contre b, c morte), environ 57 Mo au total, plus un `manifest.json` versionné (version du format et du moteur, tirages, graine, SHA-256 de chaque fichier). Écriture atomique, chargement en mémoire projetée avec vérification d'intégrité.
 
 ### 3.3 Modèle de jeu et arbre (FR-001 à FR-005)
 
