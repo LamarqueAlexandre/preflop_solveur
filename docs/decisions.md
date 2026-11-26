@@ -183,3 +183,25 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Table de type Two Plus Two (130 Mo)* : non mesurée. Numba suffit à tenir le budget, sans fichier de données supplémentaire.
 
 **Conséquences.** Le temps de construction attendu passe d'environ 1 h à **4 à 5 h** sur la machine de développement. Le plan § 3.2 et § 8 est mis à jour. Les issues #10, #11 et #12 suivent cette méthode.
+
+---
+
+## D-011 — Interprétation des sizings de FR-004
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-004, FR-005, cas limite « relance qui engage la quasi-totalité du stack »
+
+**Contexte.** FR-004 décrit les sizings par tranche (« 2x », « 3-bet à 3x la relance », « 3bb + 1bb par limper supplémentaire », « < 1bb derrière ») sans préciser leur base de calcul.
+
+**Décision.**
+1. **« 2x », « 2,5x »** : relance **à** 2bb et 2,5bb au total (montant total engagé par le relanceur, BB comprise).
+2. **« 3-bet à 3x la relance »** : 3-bet à 3 fois le montant total de la relance. Une ouverture à 2,5bb donne un 3-bet à 7,5bb.
+3. **Relance d'isolation « 3bb + 1bb par limper supplémentaire »** : 3bb au total face à un limper, 4bb face à deux. La complète de la SB compte comme un limp.
+4. **Conversion en all-in** : une relance est remplacée par un all-in si le stack restant après la relance est **strictement** inférieur à 1bb. Avec exactement 1bb derrière, la relance est conservée.
+
+**Alternatives écartées.**
+- *« 2x » = relance de 2bb en plus de la BB (soit 3bb au total)* : contraire à l'usage courant (« min-raise »).
+- *« 3x la relance » = 3 fois l'incrément de la relance* : moins usuel, et donne des 3-bets plus petits que ceux observés en Expresso.
+- *Complète de la SB non comptée comme limp* : la SB qui complète met le même montant qu'un limper et reste dans le pot ; la relance d'isolation doit en tenir compte.
+- *Seuil inclusif (≤ 1bb)* : arbitraire ; le seuil strict garde la relance quand elle laisse exactement 1bb.
+
+**Conséquences.** Issue #13 (`GameConfig`, table de sizings), puis #15 et #16 (construction de l'arbre).
