@@ -42,6 +42,23 @@ class HandRank(NamedTuple):
     kickers: tuple[int, ...]
 
 
+KICKER_BITS = 4  # one hex digit per kicker rank (0..12)
+MAX_KICKERS = 5
+CATEGORY_SHIFT = KICKER_BITS * MAX_KICKERS  # 20
+
+
+def encode_rank(rank: HandRank) -> int:
+    """Pack a hand rank into an int that preserves its order.
+
+    ``category * 16**5 + k1 * 16**4 + ... + k5``, unused kickers being 0.
+    Within a category the number of kickers is fixed, so padding keeps order.
+    """
+    value = int(rank.category) << CATEGORY_SHIFT
+    for position, kicker in enumerate(rank.kickers):
+        value |= kicker << (CATEGORY_SHIFT - KICKER_BITS * (position + 1))
+    return value
+
+
 def _check_cards(cards: Sequence[int], allowed_counts: range) -> None:
     if len(cards) not in allowed_counts:
         raise ValueError(f"expected {allowed_counts.start}..{allowed_counts.stop - 1} cards")
