@@ -1,11 +1,11 @@
 """Tests for the exhaustive (exact) equities between classes and between combos."""
 
-from itertools import combinations
+from itertools import combinations, product
 
 import numpy as np
 import pytest
 
-from engine.cards import parse_card, parse_class
+from engine.cards import COMBOS, combos_of_class, parse_card, parse_class
 from engine.equity import (
     PAIRS,
     compute_weights,
@@ -125,11 +125,34 @@ def test_aa_vs_kk_matches_published_value() -> None:
     assert aa + kk == pytest.approx(1.0, abs=1e-12)
 
 
-def test_ako_vs_22_matches_published_value() -> None:
+def test_ako_vs_22_combo_without_shared_suit_matches_published_value() -> None:
     # DeucesCracked exact table: AKo wins 46.67 %, ties 0.58 % -> 46.96 % equity.
-    ako, deuces = heads_up_equity(*classes("AKo", "22"))
-    assert ako == pytest.approx(0.4696, abs=0.001)
+    # That figure is for one combo whose suits do not overlap the pair's.
+    ako, deuces = exact_combo_equity([cards("Ah Kd"), cards("2c 2s")])
+    assert ako == pytest.approx(0.4696, abs=0.0001)
     assert ako + deuces == pytest.approx(1.0, abs=1e-12)
+
+
+def test_ako_vs_22_class_average_matches_monte_carlo() -> None:
+    # Averaged over the 72 combo pairs, from 46.96 % to 47.74 % depending on suits.
+    ako, deuces = heads_up_equity(*classes("AKo", "22"))
+    assert ako == pytest.approx(0.4735, abs=0.001)
+    assert ako + deuces == pytest.approx(1.0, abs=1e-12)
+
+    # Independent check: uniform combo pairs (no suit reduction), NumPy evaluator.
+    ako_combos = COMBOS[combos_of_class(parse_class("AKo"))].astype(np.int64)
+    deuce_combos = COMBOS[combos_of_class(parse_class("22"))].astype(np.int64)
+    pairs = np.array([np.r_[a, b] for a, b in product(ako_combos, deuce_combos)])
+    rng = np.random.default_rng(20261126)
+    n = 1_000_000
+    hands = pairs[rng.integers(len(pairs), size=n)]
+    keys = rng.random((n, 52))
+    np.put_along_axis(keys, hands, 2.0, axis=1)
+    boards = np.argpartition(keys, 5, axis=1)[:, :5]
+    first = evaluate_batch(np.hstack([hands[:, :2], boards]))
+    second = evaluate_batch(np.hstack([hands[:, 2:], boards]))
+    monte_carlo = ((first > second) + 0.5 * (first == second)).mean()
+    assert ako == pytest.approx(monte_carlo, abs=5 * 0.5 / np.sqrt(n))
 
 
 @pytest.mark.parametrize("name", ["AKs", "22", "T9o"])
