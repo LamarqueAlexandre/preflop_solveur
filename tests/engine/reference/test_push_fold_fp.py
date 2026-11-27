@@ -36,7 +36,7 @@ def solver(stack: float = STACK) -> PushFoldFictitiousPlay:
 
 def profile(**aggressive: list[float]) -> dict[str, NDArray[np.float64]]:
     """Probability of the aggressive action (push or call) by node; 0 when not given."""
-    names = {"root": "", "F": "F", "FA": "F-A", "A": "A", "AF": "A-F", "AC": "A-C"}
+    names = {"root": "root", "F": "F", "FA": "F-A", "A": "A", "AF": "A-F", "AC": "A-C"}
     result = {node: np.zeros(2) for node in DECISION_NODES}
     for name, values in aggressive.items():
         result[names[name]] = np.asarray(values, dtype=np.float64)
@@ -47,7 +47,7 @@ def profile(**aggressive: list[float]) -> dict[str, NDArray[np.float64]]:
 
 
 def test_decision_nodes_are_those_of_the_push_fold_tree() -> None:
-    assert DECISION_NODES == ("", "F", "F-A", "A", "A-F", "A-C")
+    assert DECISION_NODES == ("root", "F", "F-A", "A", "A-F", "A-C")
 
 
 def test_everyone_folds_to_the_bb() -> None:
@@ -120,7 +120,7 @@ def test_best_response_is_pure_where_values_differ() -> None:
     best = solver().best_response(profile(root=[0.5, 0.5], A=[0.5, 0.5]))
     for node in DECISION_NODES:
         assert set(np.unique(best[node])) <= {0.0, 0.5, 1.0}
-    assert best[""][STRONG] == 1.0
+    assert best["root"][STRONG] == 1.0
 
 
 def test_best_response_never_loses_against_the_profile() -> None:
