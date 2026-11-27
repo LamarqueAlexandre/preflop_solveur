@@ -62,3 +62,21 @@ Pour les arbres 8, 12 et 20bb, le benchmark compare l'évaluation de tous les te
 | 2026-11-27 | Intel Core i5-13420H, Windows 11 | 3.12.10 / 2.5.5 | 8bb (22 terminaux) | 0,49 s | 0,15 s | 0,12 s |
 | | | | 12bb (76 terminaux) | 1,33 s | 0,29 s | 0,22 s |
 | | | | 20bb (238 terminaux) | 3,88 s | 0,64 s | 0,45 s |
+
+## Convergence de DCFR mesurée par NashConv (`convergence_nashconv.py`)
+
+Issue #20. Il faut les tenseurs d'équité dans `data/equity/`. Durée : environ 18 minutes.
+
+```bash
+uv run python benchmarks/convergence_nashconv.py
+```
+
+Le script lance DCFR (paramètres de D-014, profil de réalisation par défaut) et calcule NashConv (D-001) de la stratégie moyenne à 50, 100, 200, 500 et 1 000 itérations. NashConv est exprimé en % du pot de départ (1,5bb). Le seuil de publication est de 0,5 %. Le calcul de NashConv coûte 0,1 à 0,7 s.
+
+| Date | Machine | Arbre | 50 it. | 100 it. | 200 it. | 500 it. | 1 000 it. | Temps pour 1 000 it. |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-27 | Intel Core i5-13420H, Windows 11, Python 3.12.10, NumPy 2.5.5 | 8bb | 0,094 % | 0,027 % | 0,0075 % | 0,0014 % | 0,0003 % | 90 s |
+| | | 12bb | 0,40 % | 0,096 % | 0,020 % | 0,0035 % | 0,0009 % | 286 s |
+| | | 20bb | 1,28 % | 0,27 % | 0,061 % | 0,0090 % | 0,0024 % | 641 s |
+
+Le seuil de 0,5 % est atteint en moins de 100 itérations à 20bb, soit environ 1 minute. NashConv est divisé par environ 4 quand le nombre d'itérations double. La décroissance est donc proche de 1/T², bien plus rapide que la borne théorique en 1/√T.

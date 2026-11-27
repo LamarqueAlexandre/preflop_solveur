@@ -153,6 +153,10 @@ class TerminalValues:
     def n_classes(self) -> int:
         return self._tables.n_classes
 
+    def hand_mass(self) -> Tensor:
+        """Number of combo triplets in which a player holds each class (W summed)."""
+        return self._tables.w.sum(axis=(1, 2))
+
     def _reaches(self, reaches: Reaches) -> tuple[Tensor, Tensor, Tensor]:
         if len(reaches) != N_PLAYERS:
             raise ValueError(f"one reach vector per player is needed, got {len(reaches)}")
