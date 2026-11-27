@@ -18,7 +18,7 @@ start of the hand, posted blinds included (D-007).
   computed triplet by triplet then cached for each flop context.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -274,16 +274,60 @@ class TerminalValues:
         node = self._terminal(node_id)
         arrays = self._reaches(reaches)
         i = int(player)
+        result = np.zeros(self.n_classes)
+        for amount, tensor, seats in self._merged_terms(node, i):
+            result += amount * self._contract(tensor, seats, i, arrays)
+        return result
+
+    def _merged_terms(self, node: Node, player: int) -> list[tuple[float, Tensor, Seats]]:
+        """Payoff terms with the amounts of a same (tensor, seats) added up, zeros dropped."""
         merged: dict[tuple[int, Seats], tuple[float, Tensor]] = {}
-        for amount, tensor, seats in self._payoff_terms(node, i):
+        for amount, tensor, seats in self._payoff_terms(node, player):
             key = (id(tensor), seats)
             previous = merged[key][0] if key in merged else 0.0
             merged[key] = (previous + amount, tensor)
-        result = np.zeros(self.n_classes)
-        for (_, seats), (amount, tensor) in merged.items():
-            if amount != 0:
-                result += amount * self._contract(tensor, seats, i, arrays)
-        return result
+        return [
+            (amount, tensor, seats)
+            for (_, seats), (amount, tensor) in merged.items()
+            if amount != 0
+        ]
+
+    def values_batch(
+        self, player: Position, reaches_by_node: Mapping[str, Reaches]
+    ) -> dict[str, Tensor]:
+        """``values`` at many terminals at once, with one matrix product per tensor.
+
+        Terminals sharing a tensor (W, W*E3, W*E2, flop shares) are contracted
+        together: the tensor is read once for all of them instead of once per
+        terminal (benchmarks/bench_cfr.py).
+        """
+        i = int(player)
+        n = self.n_classes
+        ids = list(reaches_by_node)
+        arrays = [self._reaches(reaches_by_node[node_id]) for node_id in ids]
+        groups: dict[tuple[int, Seats], tuple[Tensor, list[int], list[float]]] = {}
+        for column, node_id in enumerate(ids):
+            for amount, tensor, seats in self._merged_terms(self._terminal(node_id), i):
+                _, columns, amounts = groups.setdefault((id(tensor), seats), (tensor, [], []))
+                columns.append(column)
+                amounts.append(amount)
+
+        result = np.zeros((len(ids), n))
+        for (_, seats), (tensor, columns, amounts) in groups.items():
+            position = seats.index(i)
+            a, b = (seat for axis, seat in enumerate(seats) if axis != position)
+            reach_a = np.stack([arrays[c][a] for c in columns], axis=1)
+            reach_b = np.stack([arrays[c][b] for c in columns], axis=1)
+            weights = reach_a[:, None, :] * reach_b[None, :, :]  # (n, n, m)
+            m = len(columns)
+            if position == 0:
+                block = tensor.reshape(n, n * n) @ weights.reshape(n * n, m)
+            elif position == 2:
+                block = tensor.reshape(n * n, n).T @ weights.reshape(n * n, m)
+            else:
+                block = np.matmul(tensor, weights).sum(axis=0)
+            result[columns] += block.T * np.asarray(amounts)[:, None]
+        return {node_id: result[column] for column, node_id in enumerate(ids)}
 
     def expected_values(self, node_id: str, reaches: Reaches) -> tuple[float, float, float]:
         """EV of BTN, SB and BB in bb (D-007), given that the hand reaches the terminal."""
