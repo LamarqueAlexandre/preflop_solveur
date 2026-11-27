@@ -1,9 +1,11 @@
-"""Preflop action tree (FR-004, D-005, D-011), raises only; limps come with #16.
+"""Preflop action tree (FR-004, FR-005, D-005, D-011).
 
 Players act BTN -> SB -> BB. The action sets depend on the raise level:
 
-- level 0 (open): fold, sized opens, all-in;
-- level 1 (facing a raise): fold, call, sized 3-bets, all-in;
+- level 0, nobody in: fold, limp (call 1bb), sized opens, all-in;
+- level 0, facing limps: fold, limp/complete, sized isolation raise, all-in;
+  the unraised big blind checks instead of folding or calling;
+- level 1 (facing a raise, isolation included): fold, call, sized 3-bets, all-in;
 - level 2 (facing a 3-bet): fold, call, 4-bet all-in;
 - level 3 (facing a 4-bet): fold, call.
 
@@ -37,6 +39,7 @@ class Position(IntEnum):
 class ActionKind(Enum):
     FOLD = "F"
     CALL = "C"
+    CHECK = "X"
     RAISE = "R"
     ALL_IN = "A"
 
@@ -50,7 +53,7 @@ class Action:
 
     @property
     def token(self) -> str:
-        """Short label used in node identifiers: F, C, A or R<amount>."""
+        """Short label used in node identifiers: F, C, X, A or R<amount>."""
         if self.kind is ActionKind.RAISE:
             return f"R{self.amount}"
         letter: str = self.kind.value
@@ -136,10 +139,24 @@ def _next_actor(config: GameConfig, state: _State, start: int) -> int | None:
     return None
 
 
+def _limpers(state: _State) -> int:
+    """Players besides the big blind who just called it (SB complete included)."""
+    return sum(
+        1
+        for p in range(N_PLAYERS)
+        if p != Position.BB and not state.folded[p] and state.contributions[p] >= state.current_bet
+    )
+
+
 def _sized_raises(config: GameConfig, state: _State, player: int) -> list[float]:
     sizings = config.sizings
     if state.raise_level == 0:
-        targets: tuple[float, ...] = sizings.open_raises
+        n_limpers = _limpers(state)
+        if n_limpers == 0:
+            targets: tuple[float, ...] = sizings.open_raises
+        else:
+            isolation = sizings.isolation_size(n_limpers)
+            targets = () if isolation is None else (isolation,)
     elif state.raise_level == 1:
         targets = sizings.three_bet_sizes(state.current_bet)
     else:
@@ -158,9 +175,10 @@ def _actions(config: GameConfig, state: _State, player: int) -> list[Action]:
     fold = Action(ActionKind.FOLD, state.contributions[player])
     if stack <= state.current_bet:  # facing a bet that covers the stack
         return [fold, Action(ActionKind.CALL, stack)]
-    actions = [fold]
-    if state.raise_level > 0:
-        actions.append(Action(ActionKind.CALL, state.current_bet))
+    if state.contributions[player] == state.current_bet:  # unraised big blind
+        actions = [Action(ActionKind.CHECK, state.current_bet)]
+    else:
+        actions = [fold, Action(ActionKind.CALL, state.current_bet)]
     actions += [Action(ActionKind.RAISE, a) for a in _sized_raises(config, state, player)]
     if state.raise_level < 3:
         actions.append(Action(ActionKind.ALL_IN, stack))
