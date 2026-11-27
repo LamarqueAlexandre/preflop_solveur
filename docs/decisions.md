@@ -259,3 +259,21 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Équité exacte sur le pot principal, réalisation sur le pot annexe* : plausible, mais c'est une nouvelle règle du modèle, à décider avec les stacks inégaux.
 
 **Conséquences.** À traiter avec les stacks inégaux (V2), par une nouvelle décision.
+
+---
+
+## D-014 — Paramètres par défaut du Discounted CFR
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-009, FR-012, issue #19
+
+**Contexte.** Le Discounted CFR (Brown & Sandholm, 2019) dépend de trois paramètres : α (discount des regrets positifs), β (discount des regrets négatifs) et γ (poids de la stratégie moyenne). Ce sont des paramètres de convergence : ils entrent dans l'empreinte d'une solution (FR-012).
+
+**Décision.**
+1. **α = 1,5, β = 0, γ = 2**, valeurs recommandées par l'article. À la fin de l'itération t, les regrets cumulés positifs sont multipliés par t^α / (t^α + 1), les négatifs par t^β / (t^β + 1), et la somme des stratégies par (t / (t + 1))^γ.
+2. **Mises à jour alternées** dans l'ordre de parole : BTN, SB, BB. Chaque joueur voit la stratégie déjà mise à jour des précédents.
+
+**Alternatives écartées.**
+- *CFR+ (regrets négatifs remis à 0 à chaque itération)* : correspond à un cas limite de DCFR (β → −∞), moins performant que les valeurs retenues au poker selon l'article.
+- *Mises à jour simultanées* : convergence plus lente en pratique.
+
+**Conséquences.** Les paramètres sont modifiables (`DCFRParams`), et seront enregistrés avec chaque solution (#24).

@@ -44,3 +44,21 @@ Le benchmark mesure un appel `TerminalValues.values` sur les vrais tenseurs (169
 | Date | Machine | Python / NumPy | Fold | Showdown 3j | Showdown 2j | Flop 2j | Flop 3j | Cache flop (20bb) | Passe complète (20bb) |
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-11-27 | Intel Core i5-13420H, Windows 11 | 3.12.10 / 2.5.5 | 1,7 ms | 5,7 ms | 6,1 ms | 3,9 ms | 4,0 ms | 14 tenseurs, 541 Mo | 3,6 s |
+
+## Itération du Discounted CFR (`bench_cfr.py`)
+
+Issue #19. Il faut les tenseurs d'équité dans `data/equity/`.
+
+```bash
+uv run python benchmarks/bench_cfr.py
+```
+
+Pour les arbres 8, 12 et 20bb, le benchmark compare l'évaluation de tous les terminaux pour les 3 joueurs, un par un (`values`) et par lots (`values_batch`), avec des reaches aléatoires (graine `20261127`). Il mesure aussi une itération complète de DCFR (moyenne de 5 itérations après une itération de chauffe).
+
+**Optimisation mesurée.** Les terminaux qui partagent un tenseur sont évalués en un seul produit matrice-matrice : le tenseur (39 Mo) est lu une fois pour tous au lieu d'une fois par terminal. Le profilage montre que presque tout le temps restant est passé dans ces produits (BLAS).
+
+| Date | Machine | Python / NumPy | Arbre | Terminaux × 3, un par un | Par lots | Itération DCFR |
+|---|---|---|---|---|---|---|
+| 2026-11-27 | Intel Core i5-13420H, Windows 11 | 3.12.10 / 2.5.5 | 8bb (22 terminaux) | 0,49 s | 0,15 s | 0,12 s |
+| | | | 12bb (76 terminaux) | 1,33 s | 0,29 s | 0,22 s |
+| | | | 20bb (238 terminaux) | 3,88 s | 0,64 s | 0,45 s |
