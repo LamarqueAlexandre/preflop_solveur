@@ -205,3 +205,75 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Seuil inclusif (≤ 1bb)* : arbitraire ; le seuil strict garde la relance quand elle laisse exactement 1bb.
 
 **Conséquences.** Issue #13 (`GameConfig`, table de sizings), puis #15 et #16 (construction de l'arbre).
+
+---
+
+## D-012 — Format et profil de réalisation par défaut
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-007, FR-008, D-002, D-005, issue #17
+
+**Contexte.** FR-008 exige un profil de réalisation par défaut, documenté, avec des facteurs qui se rapprochent de 1 quand la tranche raccourcit. Aucune table publiée ne couvre le 3-max à 25bb ou moins. Il faut aussi fixer le format du profil et le sens des dimensions de FR-007.
+
+**Décision.**
+1. **Format** : fichier JSON (`format_version` 1) avec `name`, `version`, `description` et une liste d'entrées `(players, pot_type, tranche, position, factor)`. Le profil par défaut est livré avec le moteur (`engine/realization/profiles/default.json`).
+2. **Grille complète** : un profil couvre les 45 contextes (18 à 2 joueurs, 27 à 3 joueurs), y compris ceux que les sizings par défaut ne rendent pas atteignables (par exemple un pot relancé au flop en tranche short). Les sizings étant configurables (FR-004), ce qui est atteignable dépend de la configuration.
+3. **Sens des dimensions** :
+   - type de pot : niveau de relance 0 → limpé, 1 → relancé (isolation comprise), 2 → 3-beté ;
+   - le niveau 3 (4-bet, toujours all-in, D-005) n'a pas de type de pot : aucun pot 4-beté n'atteint le flop avec des stacks égaux. Le cas des stacks inégaux est reporté à la V2 ;
+   - position au flop : ordre de parole SB, BB, BTN ; à 2 joueurs `oop`/`ip`, à 3 joueurs `first`/`middle`/`last`.
+4. **`hand_category` (V2)** : clé optionnelle d'une entrée, qui précise l'entrée de base du même contexte. Elle est chargée et validée, mais ignorée au MVP (un facteur par contexte).
+5. **Valeurs par défaut** (version 1.0.0), heuristiques, justifiées dans [notes/realisation-equite.md](notes/realisation-equite.md) :
+
+|  | 2j IP | 2j OOP | 3j first (SB) | 3j middle (BB) | 3j last (BTN) |
+|---|---|---|---|---|---|
+| short limpé | 1,03 | 0,97 | 0,96 | 0,99 | 1,04 |
+| short relancé | 1,02 | 0,98 | 0,97 | 0,99 | 1,03 |
+| short 3-beté | 1,00 | 1,00 | 1,00 | 1,00 | 1,00 |
+| medium limpé | 1,07 | 0,93 | 0,91 | 0,97 | 1,08 |
+| medium relancé | 1,05 | 0,95 | 0,93 | 0,98 | 1,06 |
+| medium 3-beté | 1,02 | 0,98 | 0,97 | 0,99 | 1,02 |
+| deep limpé | 1,10 | 0,90 | 0,87 | 0,95 | 1,12 |
+| deep relancé | 1,08 | 0,92 | 0,90 | 0,96 | 1,10 |
+| deep 3-beté | 1,03 | 0,97 | 0,96 | 0,99 | 1,03 |
+
+**Alternatives écartées.**
+- *N'exiger que les contextes atteignables* : plus précis, mais couple le profil à la table de sizings d'une configuration.
+- *Tous les facteurs à 1 (équité brute)* : ignore l'avantage de position, que FR-007 demande de modéliser.
+- *Valeurs tirées des ordres de grandeur à 100bb* : surestiment l'effet de la position à faible SPR.
+- *Dimension « agresseur préflop »* : réelle, mais absente de FR-007. Piste pour la V2, à côté de `hand_category`.
+
+**Conséquences.** Les valeurs terminales du flop (#18) utilisent `pot_type_of`, `flop_positions` et `factor`. Le test de sensibilité (#29, SC-009) fera varier ces valeurs de ± 0,1. Toute modification des valeurs donne une nouvelle version du profil et une nouvelle décision.
+
+---
+
+## D-013 — Flop avec un joueur déjà à tapis : reporté à la V2
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-007, D-002, D-012, issue #18
+
+**Contexte.** Avec des stacks inégaux, un joueur peut être à tapis alors que deux autres, qui ont encore des jetons, vont au flop (par exemple : stacks 5/10/10, le BTN est à tapis pour 5bb, la SB et la BB paient). Le pot principal se joue alors jusqu'au bout sans décision du joueur à tapis, et le pot annexe se dispute au flop. Aucune règle du modèle ne dit comment combiner l'équité exacte et la réalisation dans ce cas. Avec des stacks égaux (MVP), ce cas n'existe pas : un joueur à tapis met tous les autres à tapis.
+
+**Décision.** Le calcul des valeurs terminales lève une erreur explicite (`NotImplementedError`) sur un terminal de flop dont un joueur vivant est à tapis. Les showdowns avec pots annexes restent entièrement gérés.
+
+**Alternatives écartées.**
+- *Réalisation sur tous les pots* : contraire au principe II pour la part à tapis du joueur à court de jetons.
+- *Équité exacte sur le pot principal, réalisation sur le pot annexe* : plausible, mais c'est une nouvelle règle du modèle, à décider avec les stacks inégaux.
+
+**Conséquences.** À traiter avec les stacks inégaux (V2), par une nouvelle décision.
+
+---
+
+## D-014 — Paramètres par défaut du Discounted CFR
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-009, FR-012, issue #19
+
+**Contexte.** Le Discounted CFR (Brown & Sandholm, 2019) dépend de trois paramètres : α (discount des regrets positifs), β (discount des regrets négatifs) et γ (poids de la stratégie moyenne). Ce sont des paramètres de convergence : ils entrent dans l'empreinte d'une solution (FR-012).
+
+**Décision.**
+1. **α = 1,5, β = 0, γ = 2**, valeurs recommandées par l'article. À la fin de l'itération t, les regrets cumulés positifs sont multipliés par t^α / (t^α + 1), les négatifs par t^β / (t^β + 1), et la somme des stratégies par (t / (t + 1))^γ.
+2. **Mises à jour alternées** dans l'ordre de parole : BTN, SB, BB. Chaque joueur voit la stratégie déjà mise à jour des précédents.
+
+**Alternatives écartées.**
+- *CFR+ (regrets négatifs remis à 0 à chaque itération)* : correspond à un cas limite de DCFR (β → −∞), moins performant que les valeurs retenues au poker selon l'article.
+- *Mises à jour simultanées* : convergence plus lente en pratique.
+
+**Conséquences.** Les paramètres sont modifiables (`DCFRParams`), et seront enregistrés avec chaque solution (#24).

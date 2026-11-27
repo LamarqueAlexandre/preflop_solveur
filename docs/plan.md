@@ -92,7 +92,10 @@ Pour chaque triplet ordonné de classes (h₁, h₂, h₃), on précalcule une f
 - Le profil est un fichier JSON versionné, indexé par `(position, type_de_pot, nb_joueurs, tranche)`.
   - Positions au flop : à 2 joueurs, en position ou hors de position ; à 3 joueurs, SB = première, BB = milieu, BTN = dernière.
   - Types de pot : limpé, relancé, 3-beté.
+  - Types de pot : niveau de relance 0 → limpé, 1 → relancé (isolation comprise), 2 → 3-beté. Aucun pot 4-beté n'atteint le flop au MVP (D-012).
+  - Un profil couvre toujours les 45 contextes, atteignables ou non avec les sizings choisis (D-012).
 - Le format prévoit une clé optionnelle `hand_category`. Les profils existants restent valides quand elle apparaîtra en V2.
+- Le profil par défaut est livré avec le moteur (`engine/realization/profiles/default.json`). Un profil personnalisé se charge depuis un fichier.
 - **Normalisation** (décision D-002) : la part de pot d'un joueur vaut `Rᵢ·eqᵢ / Σⱼ Rⱼ·eqⱼ`. Le pot est toujours entièrement redistribué et le jeu reste à somme constante.
 - Le profil par défaut est documenté dans `docs/notes/`. Un test vérifie que plus la tranche de profondeur est courte, plus les facteurs sont proches de 1.
 
