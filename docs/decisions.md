@@ -210,7 +210,7 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 
 ## D-012 — Format et profil de réalisation par défaut
 
-- **Date** : 2026-11-27 · **Statut** : Proposée · **Liens** : FR-007, FR-008, D-002, D-005, issue #17
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-007, FR-008, D-002, D-005, issue #17
 
 **Contexte.** FR-008 exige un profil de réalisation par défaut, documenté, avec des facteurs qui se rapprochent de 1 quand la tranche raccourcit. Aucune table publiée ne couvre le 3-max à 25bb ou moins. Il faut aussi fixer le format du profil et le sens des dimensions de FR-007.
 
