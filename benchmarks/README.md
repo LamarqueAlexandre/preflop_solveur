@@ -28,3 +28,19 @@ uv run python benchmarks/spike_equity_numba.py    # partie Numba
 | 2026-11-26 | Intel Core i5-13420H, Windows 11, Python 3.12.10, NumPy 2.5.5, Numba 0.68.1 | Évaluateur (mains/s) | 0,9 à 2,6 M | 9,4 M | 88,6 M |
 | | | Monte-Carlo (tirages/s) | 73 800 | 3,0 M | 23,6 M |
 | | | Énumération exacte d'un trio de combos | 2,12 s | 0,085 s | 0,046 s |
+
+## Valeurs terminales (`bench_terminal.py`)
+
+Issue #18. Il faut les tenseurs d'équité dans `data/equity/`.
+
+```bash
+uv run python benchmarks/bench_terminal.py
+```
+
+Le benchmark mesure un appel `TerminalValues.values` sur les vrais tenseurs (169 classes), pour chaque type de terminal de l'arbre 20bb, avec des reaches aléatoires (graine `20261127`). Il mesure aussi le cache des tenseurs de parts du flop et une passe complète (tous les terminaux, pour les 3 joueurs). Chaque temps est le meilleur sur 20 répétitions (3 pour la passe complète).
+
+**Optimisation mesurée.** Une contraction `np.einsum` à trois opérandes prenait 12,8 ms par appel. Chaque contraction est maintenant écrite comme un produit matrice-vecteur sur le tenseur aplati (C-contigu, sans copie), soit 1,6 à 2,5 ms. Les parts du flop du dernier joueur vivant se déduisent des autres (leur somme vaut W) : le cache passe de 25 à 14 tenseurs.
+
+| Date | Machine | Python / NumPy | Fold | Showdown 3j | Showdown 2j | Flop 2j | Flop 3j | Cache flop (20bb) | Passe complète (20bb) |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-27 | Intel Core i5-13420H, Windows 11 | 3.12.10 / 2.5.5 | 1,7 ms | 5,7 ms | 6,1 ms | 3,9 ms | 4,0 ms | 14 tenseurs, 541 Mo | 3,6 s |
