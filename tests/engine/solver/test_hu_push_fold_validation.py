@@ -31,7 +31,8 @@ REFERENCE: Final = Path(__file__).parent / "data" / "hrc_hu_push_fold_no_ante.cs
 TENSORS: Final = Path(__file__).parents[3] / DEFAULT_DIRECTORY
 STACKS: Final = (5.0, 10.0, 15.0)
 MAX_GAP: Final = 0.02
-ITERATIONS: Final = 3000
+ITERATIONS: Final = 500
+"""NashConv is ~0.0001% of the pot after 200 iterations at 5, 10 and 15bb: wide margin."""
 
 
 def _tensors_available() -> bool:

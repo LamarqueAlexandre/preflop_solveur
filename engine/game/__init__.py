@@ -11,6 +11,7 @@ from engine.game.config import (
     tranche_of,
 )
 from engine.game.pots import Pot, resolve_pots
+from engine.game.push_fold import build_heads_up_push_fold_tree
 from engine.game.tree import (
     ROOT_ID,
     Action,
@@ -36,6 +37,7 @@ __all__ = [
     "TerminalKind",
     "Tranche",
     "TrancheSizings",
+    "build_heads_up_push_fold_tree",
     "build_tree",
     "default_configs",
     "default_sizing_table",
