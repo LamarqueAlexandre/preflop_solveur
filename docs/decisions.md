@@ -243,3 +243,19 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Dimension « agresseur préflop »* : réelle, mais absente de FR-007. Piste pour la V2, à côté de `hand_category`.
 
 **Conséquences.** Les valeurs terminales du flop (#18) utilisent `pot_type_of`, `flop_positions` et `factor`. Le test de sensibilité (#29, SC-009) fera varier ces valeurs de ± 0,1. Toute modification des valeurs donne une nouvelle version du profil et une nouvelle décision.
+
+---
+
+## D-013 — Flop avec un joueur déjà à tapis : reporté à la V2
+
+- **Date** : 2026-11-27 · **Statut** : Acceptée · **Liens** : FR-007, D-002, D-012, issue #18
+
+**Contexte.** Avec des stacks inégaux, un joueur peut être à tapis alors que deux autres, qui ont encore des jetons, vont au flop (par exemple : stacks 5/10/10, le BTN est à tapis pour 5bb, la SB et la BB paient). Le pot principal se joue alors jusqu'au bout sans décision du joueur à tapis, et le pot annexe se dispute au flop. Aucune règle du modèle ne dit comment combiner l'équité exacte et la réalisation dans ce cas. Avec des stacks égaux (MVP), ce cas n'existe pas : un joueur à tapis met tous les autres à tapis.
+
+**Décision.** Le calcul des valeurs terminales lève une erreur explicite (`NotImplementedError`) sur un terminal de flop dont un joueur vivant est à tapis. Les showdowns avec pots annexes restent entièrement gérés.
+
+**Alternatives écartées.**
+- *Réalisation sur tous les pots* : contraire au principe II pour la part à tapis du joueur à court de jetons.
+- *Équité exacte sur le pot principal, réalisation sur le pot annexe* : plausible, mais c'est une nouvelle règle du modèle, à décider avec les stacks inégaux.
+
+**Conséquences.** À traiter avec les stacks inégaux (V2), par une nouvelle décision.
