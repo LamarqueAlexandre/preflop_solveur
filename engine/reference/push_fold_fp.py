@@ -223,13 +223,13 @@ class PushFoldFictitiousPlay:
         """
         n, m = self._n, len(TERMINALS)
         reaches = [self._reaches(profile, p) for p in range(N_PLAYERS)]
-        columns = []
+        columns: list[Vector] = []
         for i in range(N_PLAYERS):
             j, k = _others(i)
             columns.extend(np.outer(reaches[j][z], reaches[k][z]).ravel() for z in range(m))
         weights = np.stack(columns, axis=1)  # (n * n, players * terminals)
         contracted = [flat @ weights for flat in self._flat]  # each (n, players * terminals)
-        values = []
+        values: list[NDArray[np.float64]] = []
         for i in range(N_PLAYERS):
             block = slice(i * m, (i + 1) * m)
             v = np.zeros((m, n))
