@@ -46,6 +46,8 @@ SEAT_FRAME: Final[Seats] = (0, 1, 2)
 
 _AXIS_PERMUTATIONS: Final = ((0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0))
 _SYMMETRY_TOLERANCE: Final = 1e-6
+_MASS_CHUNK: Final = 64
+"""Nodes per matrix product in ``opponent_mass`` (bounds the memory to ~15 MB)."""
 
 
 def _seat_view(base: Tensor, order: tuple[int, int, int]) -> Tensor:
@@ -156,6 +158,25 @@ class TerminalValues:
     def hand_mass(self) -> Tensor:
         """Number of combo triplets in which a player holds each class (W summed)."""
         return self._tables.w.sum(axis=(1, 2))
+
+    def opponent_mass(self, player: Position, reaches: Tensor) -> Tensor:
+        """m_i(h) = sum_{x, y} W[h, x, y] r_j(x) r_k(y) at many nodes at once.
+
+        ``reaches`` has shape (nodes, players, classes); the result (nodes,
+        classes) is the weight of the opponents' hands still possible when
+        ``player`` holds h: dividing a counterfactual value by it gives an EV.
+        """
+        n = self.n_classes
+        if reaches.ndim != 3 or reaches.shape[1:] != (N_PLAYERS, n):
+            raise ValueError(f"reaches must have shape (nodes, 3, {n}), got {reaches.shape}")
+        j, k = _others(int(player))
+        flat = self._tables.w.reshape(n, n * n)  # W is symmetric: any seat order
+        result = np.empty((reaches.shape[0], n))
+        for start in range(0, reaches.shape[0], _MASS_CHUNK):
+            chunk = reaches[start : start + _MASS_CHUNK]
+            weights = chunk[:, j, :, None] * chunk[:, k, None, :]
+            result[start : start + len(chunk)] = (flat @ weights.reshape(len(chunk), n * n).T).T
+        return result
 
     def _reaches(self, reaches: Reaches) -> tuple[Tensor, Tensor, Tensor]:
         if len(reaches) != N_PLAYERS:

@@ -9,6 +9,7 @@ from engine.solver.exploitability import (
     best_response,
     exploitability,
 )
+from engine.solver.node_values import NodeValues, node_values
 from engine.solver.terminal import EquityTables, TerminalValues
 
 __all__ = [
@@ -18,9 +19,11 @@ __all__ = [
     "DCFRSolver",
     "EquityTables",
     "Exploitability",
+    "NodeValues",
     "Strategy",
     "TerminalValues",
     "best_response",
     "exploitability",
+    "node_values",
     "regret_matching",
 ]
