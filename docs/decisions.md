@@ -336,3 +336,23 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Score pondéré (1 / 0,5 / 0)* : moins lisible. La perte d'EV totale et moyenne mesure déjà la gravité.
 
 **Conséquences.** Le tirage réaliste produit beaucoup de spots faciles (des folds évidents). Un filtre « exclure les spots triviaux » pourra être ajouté plus tard. Code : `engine/training/`.
+
+## D-018 — Profondeur la plus proche et résumé d'un nœud
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US1 (scénarios 3 et 4), US2 (scénario 4), FR-021, D-017, issue #30
+
+**Contexte.** US1 demande de proposer « la profondeur disponible la plus proche » quand la profondeur voulue n'est pas calculée, sans dire quoi faire à égalité de distance. FR-021 demande les fréquences globales des actions et la taille de range, sans fixer la pondération des mains. Le plan (§ 4) ne prévoyait pas de route pour la recherche de profondeur.
+
+**Décision.**
+1. **Profondeur la plus proche** (`nearest_solution`) : la profondeur d'une solution est son plus petit stack. Parmi les solutions publiables, on prend la plus proche de la profondeur demandée. **À égalité, la plus basse l'emporte** (14bb demandé, 13 et 15 disponibles → 13bb). Si plusieurs solutions ont la même profondeur, la plus récente l'emporte. Route dédiée : `GET /solutions/nearest?stack=`.
+2. **Fréquences globales** : chaque classe h du joueur qui parle pèse `reach(h) × masse adverse(h)`, sa fréquence réelle au nœud dans le jeu à l'équilibre, retrait de cartes compris. C'est la même pondération que le tirage des spots (D-017).
+3. **Taille de range** : part des mains distribuées à un joueur qui atteignent le nœud, `Σ masse(h)·reach(h) / Σ masse(h)`, aussi donnée en combos (× 1326).
+4. **Nœud terminal** : la route d'un nœud renvoie aussi les terminaux, avec le pot, les mises et l'EV moyenne de chaque joueur, pondérée comme au point 2.
+
+**Alternatives écartées.**
+- *Égalité → profondeur la plus haute* : rien ne la justifie davantage. La plus basse a été retenue en revue de plan.
+- *Paramètre `?stack=` sur `GET /solutions`* : mélange une liste et une recherche dans la même route.
+- *Fréquences pondérées par les seuls combos × reach* : ignore le retrait de cartes par les ranges adverses, ce qui rend le résumé incohérent avec le tirage de l'entraînement.
+- *Recherche de profondeur côté front* : c'est une règle du produit, qui relève du moteur (principe IV).
+
+**Conséquences.** Code : `engine/library/views.py`. Explications : `docs/notes/vues-noeud.md`.
