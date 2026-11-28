@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fastapi import HTTPException, Request
 
 from api.jobs import JobStore
+from api.villain_strategies import VillainStrategyStore
 from api.worker import EquitySource
 from engine.library import SolutionStore
 
@@ -31,3 +32,11 @@ def get_jobs(request: Request) -> JobRuntime:
     if runtime is None:
         raise HTTPException(503, "on-demand computations are not configured")
     return runtime
+
+
+def get_villains(request: Request) -> VillainStrategyStore:
+    """Saved villain strategies of the application; 503 when not configured."""
+    villains: VillainStrategyStore | None = getattr(request.app.state, "villains", None)
+    if villains is None:
+        raise HTTPException(503, "saved villain strategies are not configured")
+    return villains
