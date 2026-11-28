@@ -378,3 +378,25 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Threads au lieu de processus* : le calcul garde le GIL dans ses boucles Python et ralentirait toutes les requêtes.
 
 **Conséquences.** Code : `api/jobs.py`, `api/worker.py`, `api/routes/jobs.py`. Configuration : `PREFLOP_JOBS` (base des jobs, défaut `data/jobs.sqlite3`), `PREFLOP_EQUITY` (défaut `data/equity`), `PREFLOP_JOB_WORKERS` (défaut 1, environ 120 Mo de tenseurs par process). En multi-utilisateurs, le pool de processus sera remplacé par une file de tâches, sans changer les routes ni `JobStore`.
+
+## D-020 — Stratégies de vilain enregistrées : format et règle de réutilisation
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US3 (scénario 5), FR-017, D-019, issue #32
+
+**Contexte.** US3 demande de réutiliser une stratégie de vilain enregistrée « sur d'autres spots et d'autres profondeurs ». Or les actions disponibles changent d'une tranche à l'autre. À l'ouverture du BTN : F, C, A de 3 à 8bb ; F, C, R2.0, A de 10 à 15bb ; F, C, R2.0, R2.5, A de 20 à 25bb. Une matrice actions × 169 propre à un nœud ne se transpose donc pas d'elle-même.
+
+**Décision.**
+1. **Une stratégie enregistrée couvre un seul nœud**, comme le « verrouillage » du glossaire. Elle contient :
+   - un nom unique (sans tenir compte de la casse) et une description ;
+   - le vilain pour lequel elle a été construite ;
+   - ses actions **par libellé** (`F`, `C`, `R2.0`, `A`…) ;
+   - la fréquence de chaque action pour les 169 classes, dans l'ordre du moteur ;
+   - en option, son origine (empreinte et nœud).
+2. **Réutilisation par libellés exacts** : une stratégie s'applique à tout nœud de décision qui a exactement les mêmes actions, dans n'importe quel ordre (`lock_from_saved`). Ailleurs, elle est refusée avec un message qui liste les deux jeux d'actions. Le vilain enregistré n'est qu'une indication : on peut par exemple appliquer une range d'ouverture du BTN à la SB si ses actions sont identiques.
+3. **Validation dans le moteur** (`validate_saved`, `check_strategy`) : chaque main doit recevoir des fréquences finies, positives et de somme 1. Les mains fautives sont nommées, pour que l'éditeur puisse les signaler (cas limite de la spec). `validate_locks` utilise le même contrôle.
+
+**Alternatives écartées.**
+- *Correspondance par type d'action* (fold, limp, relance, all-in) : plus portable, mais il faut inventer une règle quand le nombre de relances diffère (que deviennent R2.0 et R2.5 à 5bb ?). C'est une décision de modèle discutable. On pourra l'ajouter plus tard si l'usage le demande.
+- *Une stratégie couvrant plusieurs nœuds* : rarement réutilisable telle quelle d'une profondeur à l'autre.
+
+**Conséquences.** Code : `engine/best_response/saved.py`, `api/villain_strategies.py`, `api/routes/villain_strategies.py`. Configuration : `PREFLOP_VILLAINS` (défaut `data/villain_strategies.sqlite3`). Le front (#39, #40) applique une stratégie enregistrée à un nœud via `lock_from_saved`, exposé par l'API au besoin.
