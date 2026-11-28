@@ -252,3 +252,15 @@ def test_the_legacy_fingerprint_differs_from_the_current_engine(tmp_path: Path) 
     (summary,) = store.list_solutions()
     current = replace(store.load(summary.fingerprint), engine_version="0.1.0")
     assert solution_fingerprint(current) != summary.fingerprint
+
+
+# --- Summary of one solution -------------------------------------------------------------
+
+
+def test_summary_reads_one_solution(tmp_path: Path, solution: Solution) -> None:
+    store = FileSolutionStore(tmp_path)
+    fingerprint = store.save(solution)
+    (listed,) = store.list_solutions()
+    assert store.summary(fingerprint) == listed
+    with pytest.raises(KeyError):
+        store.summary("0" * 64)

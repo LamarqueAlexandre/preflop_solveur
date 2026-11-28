@@ -4,6 +4,8 @@ engine equity build [--draws N] [--seed S] [--classes AA,KK,...] [--output DIR]
 engine equity info [--path DIR]
 engine solve --stack S [--max-iterations N] [--target P] [--check-every K]
              [--equity DIR] [--profile FILE]
+engine batch [--stacks 3-25] [--store DIR] [--max-iterations N] [--target P]
+             [--check-every K] [--equity DIR] [--profile FILE]
 """
 
 import argparse
@@ -23,11 +25,24 @@ from engine.equity.storage import (
     save_tensors,
 )
 from engine.game import ROOT_ID, GameConfig, Position, build_tree
-from engine.library import Solution, SolveParams, solve
-from engine.realization import ProfileError, default_profile, load_profile
+from engine.game.config import STACK_GRID
+from engine.library import (
+    BatchEvent,
+    BatchReport,
+    BatchStatus,
+    ConvergenceChecked,
+    DepthStarted,
+    FileSolutionStore,
+    Solution,
+    SolveParams,
+    run_batch,
+    solve,
+)
+from engine.realization import ProfileError, RealizationProfile, default_profile, load_profile
 from engine.solver import EquityTables, Exploitability
 
 DEFAULT_SEED = 20261126
+DEFAULT_STORE = Path("data") / "solutions"
 
 
 def _positive_int(text: str) -> int:
@@ -45,6 +60,27 @@ def _positive_float(text: str) -> float:
     if not value > 0:
         raise argparse.ArgumentTypeError(f"must be positive, got {text}")
     return value
+
+
+def parse_stacks(text: str) -> list[float]:
+    """Stack list such as ``5``, ``3-25`` (1bb steps) or ``3-5,10,12``."""
+    stacks: list[float] = []
+    for item in text.split(","):
+        bounds = [bound.strip() for bound in item.split("-")]
+        if len(bounds) > 2 or not all(bounds):
+            raise ValueError(f"invalid stack or range {item.strip()!r}")
+        low, high = float(bounds[0]), float(bounds[-1])
+        if not 0 < low <= high:
+            raise ValueError(f"invalid stack or range {item.strip()!r}")
+        stacks.extend(low + step for step in range(int(high - low) + 1))
+    return stacks
+
+
+def _stack_list(text: str) -> list[float]:
+    try:
+        return parse_stacks(text)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from None
 
 
 def _class_list(text: str) -> list[int]:
@@ -131,26 +167,42 @@ def _print_summary(solution: Solution) -> None:
     print("  (EVs and exploitability are relative to the model and its realization profile)")
 
 
-def _solve(args: argparse.Namespace) -> int:
+def _load_inputs(
+    args: argparse.Namespace, stacks: Sequence[float]
+) -> tuple[RealizationProfile, list[GameConfig], EquityTables] | None:
+    """Profile, configurations and full equity tables; None (and a message) on error."""
     try:
         profile = default_profile() if args.profile is None else load_profile(args.profile)
-        config = GameConfig.equal_stacks(args.stack, realization_profile=profile.name)
+        configs = [
+            GameConfig.equal_stacks(stack, realization_profile=profile.name) for stack in stacks
+        ]
         if read_manifest(args.equity).classes is not None:
             print(
                 f"{args.equity} holds partial tensors: all 169 classes are needed", file=sys.stderr
             )
-            return 1
+            return None
         tables = EquityTables.from_stored(load_tensors(args.equity))
     except (ProfileError, ValueError, FileNotFoundError) as error:
         print(f"Cannot solve: {error}", file=sys.stderr)
-        return 1
+        return None
+    return profile, configs, tables
 
-    tree = build_tree(config)
-    params = SolveParams(
+
+def _params(args: argparse.Namespace) -> SolveParams:
+    return SolveParams(
         max_iterations=args.max_iterations,
         target_percent=args.target,
         check_every=args.check_every,
     )
+
+
+def _solve(args: argparse.Namespace) -> int:
+    inputs = _load_inputs(args, [args.stack])
+    if inputs is None:
+        return 1
+    profile, configs, tables = inputs
+    tree = build_tree(configs[0])
+    params = _params(args)
     print(
         f"Solving {args.stack:g}bb ({len(tree)} nodes), profile {profile.name} {profile.version}, "
         f"target NashConv < {params.target_percent}%, at most {params.max_iterations} iterations"
@@ -162,6 +214,57 @@ def _solve(args: argparse.Namespace) -> int:
         print(f"  iteration {iterations}: NashConv {result.percent:.4f}% ({elapsed})", flush=True)
 
     _print_summary(solve(tree, tables, profile, params, progress))
+    return 0
+
+
+def _print_batch_event(event: BatchEvent) -> None:
+    if isinstance(event, DepthStarted):
+        label = f"[{event.index}/{event.total}] {event.config.stacks[0]:g}bb"
+        state = "already stored" if event.already_stored else "solving"
+        print(f"{label}: {state} ({event.fingerprint[:12]})", flush=True)
+    elif isinstance(event, ConvergenceChecked):
+        percent = event.exploitability.percent
+        print(f"    iteration {event.iterations}: NashConv {percent:.4f}%", flush=True)
+    elif event.entry.status is BatchStatus.SOLVED:
+        summary = event.entry.summary
+        status = "publishable" if summary.publishable else "NON-CONFORMING (not published)"
+        print(
+            f"    done: {summary.iterations} iterations, NashConv "
+            f"{summary.nash_conv_percent:.4f}%, {_duration(event.entry.seconds)}, {status}",
+            flush=True,
+        )
+
+
+def _print_batch_report(report: BatchReport, store: Path) -> None:
+    print(
+        f"Batch done in {_duration(report.seconds)}: solved {report.solved}, "
+        f"skipped {report.skipped}, non-conforming {len(report.non_conforming)}"
+    )
+    for entry in report.non_conforming:
+        summary = entry.summary
+        print(
+            f"  non-conforming: {summary.stacks[0]:g}bb, NashConv "
+            f"{summary.nash_conv_percent:.4f}% after {summary.iterations} iterations "
+            "(retry with other convergence parameters, e.g. a larger --max-iterations)"
+        )
+    print(f"  store: {store}")
+    print("  (exploitability is relative to the model and its realization profile)")
+
+
+def _batch(args: argparse.Namespace) -> int:
+    inputs = _load_inputs(args, args.stacks)
+    if inputs is None:
+        return 1
+    profile, configs, tables = inputs
+    params = _params(args)
+    print(
+        f"Batch of {len(configs)} depths, profile {profile.name} {profile.version}, "
+        f"target NashConv < {params.target_percent}%, at most {params.max_iterations} "
+        f"iterations, store {args.store}"
+    )
+    store = FileSolutionStore(args.store)
+    report = run_batch(configs, tables, profile, store, params, _print_batch_event)
+    _print_batch_report(report, args.store)
     return 0
 
 
@@ -185,34 +288,49 @@ def _parser() -> argparse.ArgumentParser:
     info.add_argument("--path", type=Path, default=DEFAULT_DIRECTORY, help="tensor directory")
     info.set_defaults(handler=_info)
 
-    defaults = SolveParams()
     solve_parser = commands.add_parser("solve", help="solve the full tree of one depth")
     solve_parser.add_argument(
         "--stack", type=_positive_float, required=True, help="equal stacks, in bb"
     )
-    solve_parser.add_argument(
-        "--max-iterations", type=_positive_int, default=defaults.max_iterations
+    _add_solving_options(solve_parser)
+    solve_parser.set_defaults(handler=_solve)
+
+    batch_parser = commands.add_parser("batch", help="solve and store the depths of the grid")
+    batch_parser.add_argument(
+        "--stacks",
+        type=_stack_list,
+        default=list(STACK_GRID),
+        help=f"depths, e.g. 5,12,20 or 3-8 (default: {STACK_GRID[0]:g}-{STACK_GRID[-1]:g})",
     )
-    solve_parser.add_argument(
+    batch_parser.add_argument(
+        "--store", type=Path, default=DEFAULT_STORE, help="solution store directory"
+    )
+    _add_solving_options(batch_parser)
+    batch_parser.set_defaults(handler=_batch)
+    return parser
+
+
+def _add_solving_options(parser: argparse.ArgumentParser) -> None:
+    defaults = SolveParams()
+    parser.add_argument("--max-iterations", type=_positive_int, default=defaults.max_iterations)
+    parser.add_argument(
         "--target",
         type=_positive_float,
         default=defaults.target_percent,
         help="stop below this NashConv, in %% of the starting pot",
     )
-    solve_parser.add_argument(
+    parser.add_argument(
         "--check-every",
         type=_positive_int,
         default=defaults.check_every,
         help="iterations between two NashConv checks",
     )
-    solve_parser.add_argument(
+    parser.add_argument(
         "--equity", type=Path, default=DEFAULT_DIRECTORY, help="equity tensor directory"
     )
-    solve_parser.add_argument(
+    parser.add_argument(
         "--profile", type=Path, default=None, help="realization profile file (default: built-in)"
     )
-    solve_parser.set_defaults(handler=_solve)
-    return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
