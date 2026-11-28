@@ -400,3 +400,23 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Une stratégie couvrant plusieurs nœuds* : rarement réutilisable telle quelle d'une profondeur à l'autre.
 
 **Conséquences.** Code : `engine/best_response/saved.py`, `api/villain_strategies.py`, `api/routes/villain_strategies.py`. Configuration : `PREFLOP_VILLAINS` (défaut `data/villain_strategies.sqlite3`). Le front (#39, #40) applique une stratégie enregistrée à un nœud via `lock_from_saved`, exposé par l'API au besoin.
+
+## D-021 — Sessions d'entraînement : tirage à la création, persistance et routes
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US4, FR-025, SC-008, D-008, D-017, principe VII, issue #34
+
+**Contexte.** Le plan (§ 4) prévoit une route `/training/sessions` sans en fixer la forme. SC-008 demande moins de 300 ms entre deux spots. Mesure sur la vraie bibliothèque (23 solutions) : charger toutes les solutions prend 0,66 s et tirer 20 spots 24 ms. Recharger les solutions à chaque spot dépasserait donc le budget.
+
+**Décision.**
+1. **Tirage complet à la création** : `POST /training/sessions` charge les solutions publiables dont la profondeur passe le filtre de stacks, puis tire tous les spots d'un coup avec `draw_spots`. Servir un spot ou une réponse n'est ensuite qu'une lecture SQLite. La graine est enregistrée : tirée au hasard si elle est absente, puis renvoyée, ce qui permet de rejouer une session.
+2. **Persistance dans SQLite**, comme les jobs (D-019) et les stratégies de vilain (D-020). Chaque spot est stocké avec son corrigé (stratégie et EV par action de la main), avec les indices des actions choisies. La note est recalculée par `grade` à la lecture. L'API ne garde aucun état et une session survit à un redémarrage.
+3. **Routes** : création (filtres, `count` de 1 à 100, 20 par défaut, `seed`) ; état ; `GET …/spot` pour le spot courant, **sans le corrigé** ; `POST …/answers` avec le **libellé** de l'action (`R2.0`), qui renvoie la stratégie d'équilibre, l'EV par action, la perte d'EV, la note et la meilleure action ; `GET …/summary` pour le bilan des réponses déjà données, dont chaque erreur porte l'empreinte et le nœud pour l'ouvrir dans la vue stratégie. 409 sur une session terminée, 422 sur un libellé inconnu ou des filtres sans spot.
+4. **Seuils de notation non exposés** : on garde les valeurs par défaut de D-008 et D-017.
+
+**Alternatives écartées.**
+- *Sessions en mémoire dans l'app* : plus simple, mais perdues au redémarrage et contraires au principe VII.
+- *Tirage paresseux à chaque spot* : il faudrait garder les solutions en mémoire, ou les recharger (0,7 s, hors SC-008).
+- *Réponse par indice d'action* : moins lisible, et incohérent avec les libellés de D-020.
+- *Seuils paramétrables par session* : sans usage tant que le front ne les propose pas ; facile à ajouter plus tard.
+
+**Conséquences.** Code : `api/training.py`, `api/routes/training.py`. Configuration : `PREFLOP_TRAINING` (défaut `data/training.sqlite3`). Mesure sur la vraie bibliothèque : création en 0,14 s pour 20 spots de la SB entre 10 et 15bb, puis 22 ms au pire pour un aller-retour « spot + réponse ».
