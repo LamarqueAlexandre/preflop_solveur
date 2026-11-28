@@ -87,3 +87,74 @@ class TerminalNodeOut(BaseModel):
 
 class ErrorOut(BaseModel):
     detail: str
+
+
+FINGERPRINT_PATTERN = r"^[0-9a-f]{64}$"
+JobStatusName = Literal["pending", "running", "done", "failed"]
+JobKindName = Literal["best_response"]
+
+
+class BestResponseIn(BaseModel):
+    """Best response of ``hero`` against villains locked at some nodes (FR-014, FR-015)."""
+
+    fingerprint: str = Field(pattern=FINGERPRINT_PATTERN, description="Solution fingerprint")
+    hero: PositionName
+    locks: dict[str, list[list[float]]] = Field(
+        min_length=1,
+        description=(
+            "Villain strategy at each locked node: one row per action (node action order), "
+            "each row giving the frequency of every hand class (node hand order)"
+        ),
+    )
+
+
+class HandGainOut(BaseModel):
+    hand: str
+    row: int
+    col: int
+    combos: int
+    gain: float | None = Field(description="EV gained with this hand, bb per hand dealt")
+
+
+class HeroHandOut(BaseModel):
+    hand: str
+    equilibrium: list[float] = Field(description="Equilibrium frequency of each action")
+    best: list[float] = Field(description="Best-response frequency of each action")
+    frequency_gap: list[float] = Field(description="best - equilibrium, for each action")
+    ev_gain: float | None = Field(
+        description="EV gained from this node on, hero here with this hand, in bb"
+    )
+
+
+class HeroNodeOut(BaseModel):
+    """Comparison with equilibrium at one decision node of the hero (FR-016)."""
+
+    node_id: str
+    actions: list[ActionOut]
+    hands: list[HeroHandOut]
+
+
+class BestResponseOut(BaseModel):
+    """Best response and EV gained over equilibrium, in bb per hand dealt (D-006)."""
+
+    fingerprint: str
+    hero: PositionName
+    locked_nodes: list[str]
+    value: float = Field(description="Hero EV with the best response")
+    equilibrium_ev: float = Field(description="Hero EV with equilibrium, same villains")
+    gain: float = Field(description="value - equilibrium_ev")
+    hands: list[HandGainOut]
+    nodes: list[HeroNodeOut]
+    limitations: list[str] = Field(description="Limits of the computation (FR-018)")
+
+
+class JobOut(BaseModel):
+    """State of an on-demand job; ``result`` once ``done``, ``error`` once ``failed``."""
+
+    id: str
+    kind: JobKindName
+    status: JobStatusName
+    created_at: str
+    updated_at: str
+    error: str | None
+    result: BestResponseOut | None
