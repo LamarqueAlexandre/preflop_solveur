@@ -151,6 +151,7 @@ Une action dont la fréquence d'équilibre est non nulle compte comme correcte (
 | Route | Rôle |
 |---|---|
 | `GET /solutions` | liste des solutions conformes |
+| `GET /solutions/nearest?stack=` | profondeur demandée ou la plus proche (US1, D-018) |
 | `GET /solutions/{hash}/nodes/{node_id}` | stratégie, EV, reaches, résumé du nœud |
 | `POST /best-response` → `job_id` | lance une meilleure réponse |
 | `GET /jobs/{id}` | état et résultat d'un job |
