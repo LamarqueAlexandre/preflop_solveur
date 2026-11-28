@@ -2,6 +2,8 @@
 
 engine equity build [--draws N] [--seed S] [--classes AA,KK,...] [--output DIR]
 engine equity info [--path DIR]
+engine solve --stack S [--max-iterations N] [--target P] [--check-every K]
+             [--equity DIR] [--profile FILE]
 """
 
 import argparse
@@ -10,15 +12,20 @@ import time
 from collections.abc import Sequence
 from pathlib import Path
 
-from engine.cards import format_class, parse_class
+from engine.cards import CLASS_WEIGHTS, format_class, parse_class
 from engine.equity import N_DRAWS, compute_equity_tensors, compute_weights
 from engine.equity.storage import (
     DEFAULT_DIRECTORY,
     FormatError,
     IntegrityError,
     load_tensors,
+    read_manifest,
     save_tensors,
 )
+from engine.game import ROOT_ID, GameConfig, Position, build_tree
+from engine.library import Solution, SolveParams, solve
+from engine.realization import ProfileError, default_profile, load_profile
+from engine.solver import EquityTables, Exploitability
 
 DEFAULT_SEED = 20261126
 
@@ -27,6 +34,16 @@ def _positive_int(text: str) -> int:
     value = int(text)
     if value <= 0:
         raise argparse.ArgumentTypeError(f"must be a positive integer, got {text}")
+    return value
+
+
+def _positive_float(text: str) -> float:
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be a number, got {text}") from None
+    if not value > 0:
+        raise argparse.ArgumentTypeError(f"must be positive, got {text}")
     return value
 
 
@@ -97,6 +114,57 @@ def _info(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_summary(solution: Solution) -> None:
+    result = solution.exploitability
+    status = "publishable" if solution.publishable else "NOT publishable"
+    print(f"Done: {solution.iterations} iterations in {_duration(solution.duration_seconds)}")
+    print(f"  NashConv       : {result.percent:.4f}% of the starting pot ({status})")
+    for position, gain, ev in zip(Position, result.gains, solution.root_ev(), strict=True):
+        print(f"  {position.name:<3} EV {ev:+.4f}bb, best-response gain {gain:.6f}bb")
+    root = solution.node(ROOT_ID)
+    frequencies = root.strategy @ CLASS_WEIGHTS / float(CLASS_WEIGHTS.sum())
+    played = ", ".join(
+        f"{action.token} {frequency:.1%}"
+        for action, frequency in zip(root.actions, frequencies, strict=True)
+    )
+    print(f"  {root.actor.name} at the root: {played}")
+    print("  (EVs and exploitability are relative to the model and its realization profile)")
+
+
+def _solve(args: argparse.Namespace) -> int:
+    try:
+        profile = default_profile() if args.profile is None else load_profile(args.profile)
+        config = GameConfig.equal_stacks(args.stack, realization_profile=profile.name)
+        if read_manifest(args.equity).classes is not None:
+            print(
+                f"{args.equity} holds partial tensors: all 169 classes are needed", file=sys.stderr
+            )
+            return 1
+        tables = EquityTables.from_stored(load_tensors(args.equity))
+    except (ProfileError, ValueError, FileNotFoundError) as error:
+        print(f"Cannot solve: {error}", file=sys.stderr)
+        return 1
+
+    tree = build_tree(config)
+    params = SolveParams(
+        max_iterations=args.max_iterations,
+        target_percent=args.target,
+        check_every=args.check_every,
+    )
+    print(
+        f"Solving {args.stack:g}bb ({len(tree)} nodes), profile {profile.name} {profile.version}, "
+        f"target NashConv < {params.target_percent}%, at most {params.max_iterations} iterations"
+    )
+    start = time.perf_counter()
+
+    def progress(iterations: int, result: Exploitability) -> None:
+        elapsed = _duration(time.perf_counter() - start)
+        print(f"  iteration {iterations}: NashConv {result.percent:.4f}% ({elapsed})", flush=True)
+
+    _print_summary(solve(tree, tables, profile, params, progress))
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="engine", description="Expresso 3-max preflop engine.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -116,6 +184,34 @@ def _parser() -> argparse.ArgumentParser:
     info = equity_commands.add_parser("info", help="show the manifest and check integrity")
     info.add_argument("--path", type=Path, default=DEFAULT_DIRECTORY, help="tensor directory")
     info.set_defaults(handler=_info)
+
+    defaults = SolveParams()
+    solve_parser = commands.add_parser("solve", help="solve the full tree of one depth")
+    solve_parser.add_argument(
+        "--stack", type=_positive_float, required=True, help="equal stacks, in bb"
+    )
+    solve_parser.add_argument(
+        "--max-iterations", type=_positive_int, default=defaults.max_iterations
+    )
+    solve_parser.add_argument(
+        "--target",
+        type=_positive_float,
+        default=defaults.target_percent,
+        help="stop below this NashConv, in %% of the starting pot",
+    )
+    solve_parser.add_argument(
+        "--check-every",
+        type=_positive_int,
+        default=defaults.check_every,
+        help="iterations between two NashConv checks",
+    )
+    solve_parser.add_argument(
+        "--equity", type=Path, default=DEFAULT_DIRECTORY, help="equity tensor directory"
+    )
+    solve_parser.add_argument(
+        "--profile", type=Path, default=None, help="realization profile file (default: built-in)"
+    )
+    solve_parser.set_defaults(handler=_solve)
     return parser
 
 

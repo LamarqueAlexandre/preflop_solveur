@@ -277,3 +277,21 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Mises à jour simultanées* : convergence plus lente en pratique.
 
 **Conséquences.** Les paramètres sont modifiables (`DCFRParams`), et seront enregistrés avec chaque solution (#24).
+
+## D-015 — Critère d'arrêt de la résolution
+
+- **Date** : 2026-11-28 · **Statut** : Acceptée · **Liens** : FR-009, FR-010, FR-012, SC-001, issue #23
+
+**Contexte.** Le DCFR (D-014) n'a pas de critère d'arrêt naturel, et il n'a aucune garantie de convergence à 3 joueurs. Les mesures faites sur l'arbre complet avec les vrais tenseurs donnent, à 20bb, un NashConv de 0,27 % après 100 itérations et de 0,026 % après 300, à environ 0,5 s par itération. Ce critère est un paramètre de convergence : il entre dans l'empreinte d'une solution (FR-012).
+
+**Décision.**
+1. La résolution enchaîne des blocs de **100 itérations**. Après chaque bloc, elle mesure le NashConv de la stratégie moyenne.
+2. Elle s'arrête au premier contrôle où NashConv < **0,1 %** du pot de départ, ou au plus tard après **2 000 itérations**.
+3. Une solution reste publiable si NashConv < 0,5 % (D-001). Une solution arrêtée à 2 000 itérations au-dessus de ce seuil est marquée non conforme.
+
+**Alternatives écartées.**
+- *Nombre fixe d'itérations* : plus simple, mais gaspille du temps aux faibles profondeurs et ne garantit rien aux fortes profondeurs.
+- *Cible à 0,5 %, égale au seuil de publication* : aucune marge face au bruit des équités Monte-Carlo (SC-003) et aux petits changements de modèle.
+- *Contrôle à chaque itération* : chaque mesure de NashConv coûte environ une itération, ce qui doublerait la durée de calcul.
+
+**Conséquences.** `SolveParams` porte ces valeurs, qui restent modifiables (`engine solve --target --max-iterations --check-every`). Elles seront enregistrées avec chaque solution (#24).
