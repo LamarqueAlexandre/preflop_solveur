@@ -356,3 +356,25 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Recherche de profondeur côté front* : c'est une règle du produit, qui relève du moteur (principe IV).
 
 **Conséquences.** Code : `engine/library/views.py`. Explications : `docs/notes/vues-noeud.md`.
+
+## D-019 — Jobs à la demande : format des verrous, cycle de vie et reprise
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US3, FR-014 à FR-016, FR-018, principe VII, issue #31
+
+**Contexte.** Le plan (§ 4) prévoit que les meilleures réponses tournent en jobs, dans un exécuteur de processus, avec un état persisté dans SQLite. Il ne fixe ni le format des verrous envoyés par le front, ni le sort d'un job interrompu par un arrêt de l'API, ni la forme du résultat. Mesure à 25bb sur les vrais tenseurs : environ 1 s pour charger les tenseurs, 2,5 s pour la première meilleure réponse d'une solution (construction du cache des parts au flop), puis 0,2 s pour les suivantes.
+
+**Décision.**
+1. **Verrous** : `{node_id: matrice actions × classes}`, soit le format du moteur (`Locks`). L'ordre des actions et des mains est celui de `GET /solutions/{hash}/nodes/{node_id}`. Les verrous sont validés **à la soumission** (`validate_locks`, réponse 422), pas dans le job. Il faut au moins un verrou.
+2. **Cycle de vie** : `pending` → `running` → `done` | `failed`. Le worker écrit lui-même ses transitions dans SQLite. Un résultat terminé survit donc à un arrêt de l'API.
+3. **Reprise** : au démarrage, l'API marque `failed` les jobs restés `pending` ou `running` (« interrompu par un redémarrage de l'API »). Ils ne sont pas relancés automatiquement.
+4. **Résultat complet dans le job** : totaux, gain par main, et pour chaque nœud du héros, l'équilibre, la meilleure réponse, l'écart de fréquence et l'EV gagnée pour chaque main, plus les limites du calcul (FR-018). Environ 0,5 Mo à 15bb.
+5. **Cache local au worker** : chaque process de calcul garde les tenseurs, ainsi que les `TerminalValues` des 4 dernières solutions. C'est un cache de calcul, pas un état de l'API : le perdre ne coûte que du temps.
+6. **Tenseurs incohérents** : si l'empreinte des tenseurs de l'API diffère de celle de la solution, le job échoue avec un message explicite (D-016).
+
+**Alternatives écartées.**
+- *Verrous indexés par notation de main (`{"AKs": [...]}`)* : plus lisibles, mais il faut une règle pour les mains absentes. Le front fait la conversion.
+- *Relance automatique des jobs interrompus* : on risque de relancer en boucle un job qui fait tomber le worker, et ce n'est pas utile en mono-utilisateur.
+- *Résumé dans le job et détail par route de nœud* : plus d'appels et plus de code pour un gain de taille sans enjeu dans le MVP.
+- *Threads au lieu de processus* : le calcul garde le GIL dans ses boucles Python et ralentirait toutes les requêtes.
+
+**Conséquences.** Code : `api/jobs.py`, `api/worker.py`, `api/routes/jobs.py`. Configuration : `PREFLOP_JOBS` (base des jobs, défaut `data/jobs.sqlite3`), `PREFLOP_EQUITY` (défaut `data/equity`), `PREFLOP_JOB_WORKERS` (défaut 1, environ 120 Mo de tenseurs par process). En multi-utilisateurs, le pool de processus sera remplacé par une file de tâches, sans changer les routes ni `JobStore`.

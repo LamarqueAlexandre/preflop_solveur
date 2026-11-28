@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 
 from api.dependencies import get_store
 from api.schemas import (
+    FINGERPRINT_PATTERN,
     ActionOut,
     DecisionNodeOut,
     ErrorOut,
@@ -32,7 +33,7 @@ from engine.library import (
 router = APIRouter(prefix="/solutions", tags=["solutions"])
 
 Store = Annotated[SolutionStore, Depends(get_store)]
-Fingerprint = Annotated[str, Path(pattern=r"^[0-9a-f]{64}$", description="SHA-256 fingerprint")]
+Fingerprint = Annotated[str, Path(pattern=FINGERPRINT_PATTERN, description="SHA-256 fingerprint")]
 NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": ErrorOut}}
 
 
@@ -56,7 +57,7 @@ def _floats(values: NDArray[np.float64]) -> list[float | None]:
     return [float(v) if math.isfinite(v) else None for v in values.tolist()]
 
 
-def _load(store: SolutionStore, fingerprint: str) -> Solution:
+def load_publishable(store: SolutionStore, fingerprint: str) -> Solution:
     """A publishable stored solution, or 404."""
     try:
         if not store.summary(fingerprint).publishable:
@@ -98,7 +99,7 @@ def read_node(
 
     Terminal: pot and mean EV of each player (US2 scenario 4).
     """
-    solution = _load(store, fingerprint)
+    solution = load_publishable(store, fingerprint)
     if node_id not in solution.tree.nodes:
         raise HTTPException(404, f"node {node_id!r} not found")
     if solution.tree.node(node_id).is_terminal:
