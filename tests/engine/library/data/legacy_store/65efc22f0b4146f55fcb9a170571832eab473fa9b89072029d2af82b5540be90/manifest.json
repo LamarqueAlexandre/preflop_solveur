@@ -1,0 +1,1559 @@
+{
+ "format_version": 1,
+ "fingerprint": "65efc22f0b4146f55fcb9a170571832eab473fa9b89072029d2af82b5540be90",
+ "fingerprint_schema": 1,
+ "engine_version": "0.0.0",
+ "created_at": "2026-11-28T12:00:06+00:00",
+ "n_classes": 4,
+ "config": {
+  "stacks": [
+   5.0,
+   5.0,
+   5.0
+  ],
+  "small_blind": 0.5,
+  "big_blind": 1.0,
+  "all_in_threshold": 1.0,
+  "realization_profile": "default",
+  "sizing_table": {
+   "short": {
+    "open_raises": [],
+    "three_bet_multipliers": [],
+    "isolation_base": null,
+    "isolation_per_extra_limper": 1.0
+   },
+   "medium": {
+    "open_raises": [
+     2.0
+    ],
+    "three_bet_multipliers": [],
+    "isolation_base": 3.0,
+    "isolation_per_extra_limper": 1.0
+   },
+   "deep": {
+    "open_raises": [
+     2.0,
+     2.5
+    ],
+    "three_bet_multipliers": [
+     3.0
+    ],
+    "isolation_base": 3.0,
+    "isolation_per_extra_limper": 1.0
+   }
+  }
+ },
+ "tree": [
+  {
+   "id": "root",
+   "actor": 0,
+   "actions": [
+    [
+     "F",
+     0.0
+    ],
+    [
+     "C",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "F",
+    "C",
+    "A"
+   ],
+   "contributions": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "F",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     0.5
+    ],
+    [
+     "C",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "F-F",
+    "F-C",
+    "F-A"
+   ],
+   "contributions": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "F-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    true,
+    true,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": "fold"
+  },
+  {
+   "id": "F-C",
+   "actor": 2,
+   "actions": [
+    [
+     "X",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "F-C-X",
+    "F-C-A"
+   ],
+   "contributions": [
+    0.0,
+    1.0,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    4.0,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "F-C-X",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    1.0,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    4.0,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": "flop"
+  },
+  {
+   "id": "F-C-A",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "F-C-A-F",
+    "F-C-A-C"
+   ],
+   "contributions": [
+    0.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    5.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "F-C-A-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    5.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "F-C-A-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    5.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "F-A",
+   "actor": 2,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "F-A-F",
+    "F-A-C"
+   ],
+   "contributions": [
+    0.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "F-A-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    5.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "F-A-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    0.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    5.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     0.5
+    ],
+    [
+     "C",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-F",
+    "C-C",
+    "C-A"
+   ],
+   "contributions": [
+    1.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "C-F",
+   "actor": 2,
+   "actions": [
+    [
+     "X",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-F-X",
+    "C-F-A"
+   ],
+   "contributions": [
+    1.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "C-F-X",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": "flop"
+  },
+  {
+   "id": "C-F-A",
+   "actor": 0,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-F-A-F",
+    "C-F-A-C"
+   ],
+   "contributions": [
+    1.0,
+    0.5,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    4.5,
+    0.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-F-A-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    0.5,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    4.5,
+    0.0
+   ],
+   "folded": [
+    true,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "C-F-A-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    0.5,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    4.5,
+    0.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-C",
+   "actor": 2,
+   "actions": [
+    [
+     "X",
+     1.0
+    ],
+    [
+     "A",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-C-X",
+    "C-C-A"
+   ],
+   "contributions": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    4.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": null
+  },
+  {
+   "id": "C-C-X",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    4.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 0,
+   "terminal": "flop"
+  },
+  {
+   "id": "C-C-A",
+   "actor": 0,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-C-A-F",
+    "C-C-A-C"
+   ],
+   "contributions": [
+    1.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-C-A-F",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-C-A-F-F",
+    "C-C-A-F-C"
+   ],
+   "contributions": [
+    1.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-C-A-F-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "C-C-A-F-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-C-A-C",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-C-A-C-F",
+    "C-C-A-C-C"
+   ],
+   "contributions": [
+    5.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-C-A-C-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    1.0,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    4.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-C-A-C-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-A",
+   "actor": 2,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-A-F",
+    "C-A-C"
+   ],
+   "contributions": [
+    1.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-A-F",
+   "actor": 0,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-A-F-F",
+    "C-A-F-C"
+   ],
+   "contributions": [
+    1.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-A-F-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    true,
+    false,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "C-A-F-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-A-C",
+   "actor": 0,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "C-A-C-F",
+    "C-A-C-C"
+   ],
+   "contributions": [
+    1.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "C-A-C-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    1.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    4.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    true,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "C-A-C-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "A",
+   "actor": 1,
+   "actions": [
+    [
+     "F",
+     0.5
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "A-F",
+    "A-C"
+   ],
+   "contributions": [
+    5.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "A-F",
+   "actor": 2,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "A-F-F",
+    "A-F-C"
+   ],
+   "contributions": [
+    5.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "A-F-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    0.5,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    4.5,
+    4.0
+   ],
+   "folded": [
+    false,
+    true,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": "fold"
+  },
+  {
+   "id": "A-F-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    0.5,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    4.5,
+    0.0
+   ],
+   "folded": [
+    false,
+    true,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "A-C",
+   "actor": 2,
+   "actions": [
+    [
+     "F",
+     1.0
+    ],
+    [
+     "C",
+     5.0
+    ]
+   ],
+   "children": [
+    "A-C-F",
+    "A-C-C"
+   ],
+   "contributions": [
+    5.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": null
+  },
+  {
+   "id": "A-C-F",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    5.0,
+    1.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    4.0
+   ],
+   "folded": [
+    false,
+    false,
+    true
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  },
+  {
+   "id": "A-C-C",
+   "actor": null,
+   "actions": [],
+   "children": [],
+   "contributions": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "stacks": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "folded": [
+    false,
+    false,
+    false
+   ],
+   "raise_level": 1,
+   "terminal": "showdown"
+  }
+ ],
+ "profile": {
+  "format_version": 1,
+  "name": "default",
+  "version": "1.0.0",
+  "description": "Default heuristic profile (D-012): factors move away from 1 as the stack-to-pot ratio at the flop grows. See docs/notes/realisation-equite.md.",
+  "entries": [
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "deep",
+    "position": "ip",
+    "factor": 1.03
+   },
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "deep",
+    "position": "oop",
+    "factor": 0.97
+   },
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "medium",
+    "position": "ip",
+    "factor": 1.02
+   },
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "medium",
+    "position": "oop",
+    "factor": 0.98
+   },
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "short",
+    "position": "ip",
+    "factor": 1.0
+   },
+   {
+    "players": 2,
+    "pot_type": "3bet",
+    "tranche": "short",
+    "position": "oop",
+    "factor": 1.0
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "deep",
+    "position": "ip",
+    "factor": 1.1
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "deep",
+    "position": "oop",
+    "factor": 0.9
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "medium",
+    "position": "ip",
+    "factor": 1.07
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "medium",
+    "position": "oop",
+    "factor": 0.93
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "short",
+    "position": "ip",
+    "factor": 1.03
+   },
+   {
+    "players": 2,
+    "pot_type": "limped",
+    "tranche": "short",
+    "position": "oop",
+    "factor": 0.97
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "deep",
+    "position": "ip",
+    "factor": 1.08
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "deep",
+    "position": "oop",
+    "factor": 0.92
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "medium",
+    "position": "ip",
+    "factor": 1.05
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "medium",
+    "position": "oop",
+    "factor": 0.95
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "short",
+    "position": "ip",
+    "factor": 1.02
+   },
+   {
+    "players": 2,
+    "pot_type": "raised",
+    "tranche": "short",
+    "position": "oop",
+    "factor": 0.98
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "deep",
+    "position": "first",
+    "factor": 0.96
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "deep",
+    "position": "last",
+    "factor": 1.03
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "deep",
+    "position": "middle",
+    "factor": 0.99
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "medium",
+    "position": "first",
+    "factor": 0.97
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "medium",
+    "position": "last",
+    "factor": 1.02
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "medium",
+    "position": "middle",
+    "factor": 0.99
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "short",
+    "position": "first",
+    "factor": 1.0
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "short",
+    "position": "last",
+    "factor": 1.0
+   },
+   {
+    "players": 3,
+    "pot_type": "3bet",
+    "tranche": "short",
+    "position": "middle",
+    "factor": 1.0
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "deep",
+    "position": "first",
+    "factor": 0.87
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "deep",
+    "position": "last",
+    "factor": 1.12
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "deep",
+    "position": "middle",
+    "factor": 0.95
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "medium",
+    "position": "first",
+    "factor": 0.91
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "medium",
+    "position": "last",
+    "factor": 1.08
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "medium",
+    "position": "middle",
+    "factor": 0.97
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "short",
+    "position": "first",
+    "factor": 0.96
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "short",
+    "position": "last",
+    "factor": 1.04
+   },
+   {
+    "players": 3,
+    "pot_type": "limped",
+    "tranche": "short",
+    "position": "middle",
+    "factor": 0.99
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "deep",
+    "position": "first",
+    "factor": 0.9
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "deep",
+    "position": "last",
+    "factor": 1.1
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "deep",
+    "position": "middle",
+    "factor": 0.96
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "medium",
+    "position": "first",
+    "factor": 0.93
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "medium",
+    "position": "last",
+    "factor": 1.06
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "medium",
+    "position": "middle",
+    "factor": 0.98
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "short",
+    "position": "first",
+    "factor": 0.97
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "short",
+    "position": "last",
+    "factor": 1.03
+   },
+   {
+    "players": 3,
+    "pot_type": "raised",
+    "tranche": "short",
+    "position": "middle",
+    "factor": 0.99
+   }
+  ]
+ },
+ "params": {
+  "max_iterations": 50,
+  "target_percent": 0.1,
+  "check_every": 10,
+  "dcfr": {
+   "alpha": 1.5,
+   "beta": 0.0,
+   "gamma": 2.0
+  }
+ },
+ "equity_digest": "f411b1f2d57301732249e43334464ed35160a5b3b04a3078c5c1a78f6a67bc56",
+ "iterations": 30,
+ "duration_seconds": 0.12259780000022147,
+ "exploitability": {
+  "ev": [
+   0.2809840230869459,
+   -0.06307895368603769,
+   -0.21790506940090806
+  ],
+  "best_response_values": [
+   0.2813028866677836,
+   -0.062387542901916795,
+   -0.21757320828089827
+  ],
+  "starting_pot": 1.5,
+  "gains": [
+   0.0003188635808376583,
+   0.0006914107841208966,
+   0.0003318611200097965
+  ],
+  "nash_conv": 0.0013421354849683514,
+  "percent": 0.0894756989978901
+ },
+ "publishable": true,
+ "checksums": {
+  "arrays.npz": "fbbd6aa9d65358a086ea4853c14320846c4b1cb065a18bb8224a91a5271ae201"
+ }
+}

@@ -1,0 +1,2 @@
+# Frozen fixture: its bytes must never change (D-016)
+tests/engine/library/data/legacy_store/** binary
