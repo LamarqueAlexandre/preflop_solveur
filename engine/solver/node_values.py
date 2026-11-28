@@ -51,13 +51,19 @@ class NodeValues:
         return self._index[node_id]
 
     def reach_at(self, node_id: str) -> NDArray[np.float64]:
-        return self.reach[self.index(node_id)]
+        """Shape (players, classes)."""
+        row: NDArray[np.float64] = self.reach[self.index(node_id)]
+        return row
 
     def opponent_mass_at(self, node_id: str) -> NDArray[np.float64]:
-        return self.opponent_mass[self.index(node_id)]
+        """Shape (players, classes)."""
+        row: NDArray[np.float64] = self.opponent_mass[self.index(node_id)]
+        return row
 
     def ev_at(self, node_id: str) -> NDArray[np.float64]:
-        return self.ev[self.index(node_id)]
+        """Shape (players, classes)."""
+        row: NDArray[np.float64] = self.ev[self.index(node_id)]
+        return row
 
 
 def _counterfactual_values(
