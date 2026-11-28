@@ -12,7 +12,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from engine.cards import CLASS_OF_COMBO, COMBOS
+from engine.cards import CLASS_OF_COMBO, COMBOS, RANK_CHARS
 from engine.game import (
     ROOT_ID,
     Action,
@@ -264,7 +264,7 @@ def test_drawn_spots_respect_the_filters(
     span: float | None,
     seed: int,
 ) -> None:
-    high = None if span is None else (low or 0.0) + span
+    high = None if span is None or low is None else low + span
     filters = SpotFilters(positions=positions, types=types, min_stack=low, max_stack=high)
     try:
         spots = draw_spots(library, filters, 25, seed)
@@ -391,3 +391,11 @@ def test_summary_of_an_empty_session() -> None:
     assert summary.count == 0
     assert summary.score == summary.total_loss == summary.mean_loss == 0.0
     assert summary.errors == ()
+
+
+def test_cards_are_written_highest_rank_first() -> None:
+    tree = build_tree(GameConfig.equal_stacks(5.0))
+    solution = solve(tree, strength_tables([1.0] * 169), default_profile(), SolveParams(1, 0.1, 1))
+    for spot in draw_spots({"x": solution}, SpotFilters(), 100, seed=9):
+        assert spot.cards is not None
+        assert RANK_CHARS.index(spot.cards_text[0]) >= RANK_CHARS.index(spot.cards_text[2])
