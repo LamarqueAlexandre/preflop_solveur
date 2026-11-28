@@ -153,7 +153,7 @@ Une action dont la fréquence d'équilibre est non nulle compte comme correcte (
 | `GET /solutions` | liste des solutions conformes |
 | `GET /solutions/nearest?stack=` | profondeur demandée ou la plus proche (US1, D-018) |
 | `GET /solutions/{hash}/nodes/{node_id}` | stratégie, EV, reaches, résumé du nœud |
-| `POST /best-response` → `job_id` | lance une meilleure réponse |
+| `POST /best-response` → job (202) | lance une meilleure réponse ; verrous validés à la soumission (D-019) |
 | `GET /jobs/{id}` | état et résultat d'un job |
 | `/villain-strategies` (CRUD) | stratégies de vilain enregistrées (FR-017) |
 | `/training/sessions` | sessions d'entraînement |
