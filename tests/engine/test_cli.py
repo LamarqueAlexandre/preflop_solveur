@@ -8,9 +8,10 @@ import numpy as np
 import pytest
 
 from engine.cards import parse_class
-from engine.cli import main
+from engine.cli import main, parse_stacks
 from engine.equity import EquityTensors, compute_weights
 from engine.equity.storage import load_tensors, save_tensors
+from engine.library import FileSolutionStore
 
 
 def test_equity_build_on_a_subset(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -180,4 +181,64 @@ def test_solve_reports_errors(
 def test_solve_invalid_arguments_are_rejected(arguments: list[str]) -> None:
     with pytest.raises(SystemExit) as error:
         main(arguments)
+    assert error.value.code != 0
+
+
+# --- engine batch ------------------------------------------------------------------------
+
+
+def run_batch_command(equity: Path, store: Path, *extra: str) -> int:
+    arguments = ["batch", "--equity", str(equity), "--store", str(store)]
+    return main([*arguments, "--max-iterations", "2", "--check-every", "1", *extra])
+
+
+def test_batch_stores_each_depth_then_skips_them(
+    synthetic_equity: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    store = tmp_path / "solutions"
+    assert run_batch_command(synthetic_equity, store, "--stacks", "3,4") == 0
+    out = capsys.readouterr().out
+    assert "3bb" in out and "4bb" in out
+    assert "solved 2" in out
+    assert len(FileSolutionStore(store).list_solutions()) == 2
+
+    assert run_batch_command(synthetic_equity, store, "--stacks", "3-4") == 0
+    out = capsys.readouterr().out
+    assert out.count("already stored") == 2
+    assert "skipped 2" in out
+
+
+def test_batch_reports_non_conforming_solutions(
+    synthetic_equity: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    store = tmp_path / "solutions"
+    assert run_batch_command(synthetic_equity, store, "--stacks", "20") == 0
+    assert "non-conforming 1" in capsys.readouterr().out
+
+
+def test_batch_rejects_partial_tensors(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    output = tmp_path / "equity"
+    main(["equity", "build", "--draws", "500", "--classes", "AA,KK", "--output", str(output)])
+    capsys.readouterr()
+    assert run_batch_command(output, tmp_path / "solutions", "--stacks", "5") == 1
+    assert "169" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("5", [5.0]),
+        ("3-5", [3.0, 4.0, 5.0]),
+        ("5,12,20", [5.0, 12.0, 20.0]),
+        ("3-4,10", [3.0, 4.0, 10.0]),
+    ],
+)
+def test_stack_list_parsing(text: str, expected: list[float]) -> None:
+    assert parse_stacks(text) == expected
+
+
+@pytest.mark.parametrize("text", ["abc", "5-3", "0", "-2", "", "3-"])
+def test_invalid_stack_lists_are_rejected(text: str) -> None:
+    with pytest.raises(SystemExit) as error:
+        main(["batch", "--stacks", text])
     assert error.value.code != 0
