@@ -318,3 +318,105 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Une clé npz par nœud* : plus lisible, mais des centaines d'entrées par fichier.
 
 **Conséquences.** Changer la version du moteur (aujourd'hui 0.1.0) change toutes les empreintes et fait recalculer toute la bibliothèque. On ne la change donc que lorsque le calcul change. Une solution à 20bb pèse environ 2,7 Mo, soit moins de 60 Mo pour les 23 profondeurs.
+
+## D-017 — Entraînement : tirage des spots, action mixte et score
+
+- **Date** : 2026-11-28 · **Statut** : Acceptée · **Liens** : US4, FR-025, D-008, issue #33
+
+**Contexte.** D-008 fixe les seuils de notation et dit qu'« une action à fréquence d'équilibre non nulle compte comme correcte ». Or la stratégie moyenne du DCFR donne des fréquences minuscules (de l'ordre de 0,001) à presque toutes les actions : prise au pied de la lettre, la règle compterait presque tout comme juste. US4 ne dit pas non plus comment tirer les spots ni comment calculer le score.
+
+**Décision.**
+1. **Action mixte** : une action jouée **au moins 1 %** du temps à l'équilibre (seuil `mixed_frequency`, paramétrable) est notée « meilleure action ». La perte d'EV affichée reste la perte réelle, par exemple 0,02bb, et sert au bilan.
+2. **Tirage** : une profondeur est tirée uniformément parmi celles qui respectent les filtres. Un couple (nœud, main) du héros est ensuite tiré avec sa fréquence réelle dans le jeu à l'équilibre : poids = reach du héros × masse des mains adverses encore possibles. Le combo est tiré uniformément dans la classe. Le tirage est reproductible avec une graine.
+3. **Score** : part des réponses notées « meilleure action ».
+
+**Alternatives écartées.**
+- *Fréquence strictement non nulle* : sans effet, à cause du bruit de convergence.
+- *Nœuds tirés uniformément* : surreprésente des lignes rares, comme les 4-bets après un limp-relance.
+- *Score pondéré (1 / 0,5 / 0)* : moins lisible. La perte d'EV totale et moyenne mesure déjà la gravité.
+
+**Conséquences.** Le tirage réaliste produit beaucoup de spots faciles (des folds évidents). Un filtre « exclure les spots triviaux » pourra être ajouté plus tard. Code : `engine/training/`.
+
+## D-018 — Profondeur la plus proche et résumé d'un nœud
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US1 (scénarios 3 et 4), US2 (scénario 4), FR-021, D-017, issue #30
+
+**Contexte.** US1 demande de proposer « la profondeur disponible la plus proche » quand la profondeur voulue n'est pas calculée, sans dire quoi faire à égalité de distance. FR-021 demande les fréquences globales des actions et la taille de range, sans fixer la pondération des mains. Le plan (§ 4) ne prévoyait pas de route pour la recherche de profondeur.
+
+**Décision.**
+1. **Profondeur la plus proche** (`nearest_solution`) : la profondeur d'une solution est son plus petit stack. Parmi les solutions publiables, on prend la plus proche de la profondeur demandée. **À égalité, la plus basse l'emporte** (14bb demandé, 13 et 15 disponibles → 13bb). Si plusieurs solutions ont la même profondeur, la plus récente l'emporte. Route dédiée : `GET /solutions/nearest?stack=`.
+2. **Fréquences globales** : chaque classe h du joueur qui parle pèse `reach(h) × masse adverse(h)`, sa fréquence réelle au nœud dans le jeu à l'équilibre, retrait de cartes compris. C'est la même pondération que le tirage des spots (D-017).
+3. **Taille de range** : part des mains distribuées à un joueur qui atteignent le nœud, `Σ masse(h)·reach(h) / Σ masse(h)`, aussi donnée en combos (× 1326).
+4. **Nœud terminal** : la route d'un nœud renvoie aussi les terminaux, avec le pot, les mises et l'EV moyenne de chaque joueur, pondérée comme au point 2.
+
+**Alternatives écartées.**
+- *Égalité → profondeur la plus haute* : rien ne la justifie davantage. La plus basse a été retenue en revue de plan.
+- *Paramètre `?stack=` sur `GET /solutions`* : mélange une liste et une recherche dans la même route.
+- *Fréquences pondérées par les seuls combos × reach* : ignore le retrait de cartes par les ranges adverses, ce qui rend le résumé incohérent avec le tirage de l'entraînement.
+- *Recherche de profondeur côté front* : c'est une règle du produit, qui relève du moteur (principe IV).
+
+**Conséquences.** Code : `engine/library/views.py`. Explications : `docs/notes/vues-noeud.md`.
+
+## D-019 — Jobs à la demande : format des verrous, cycle de vie et reprise
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US3, FR-014 à FR-016, FR-018, principe VII, issue #31
+
+**Contexte.** Le plan (§ 4) prévoit que les meilleures réponses tournent en jobs, dans un exécuteur de processus, avec un état persisté dans SQLite. Il ne fixe ni le format des verrous envoyés par le front, ni le sort d'un job interrompu par un arrêt de l'API, ni la forme du résultat. Mesure à 25bb sur les vrais tenseurs : environ 1 s pour charger les tenseurs, 2,5 s pour la première meilleure réponse d'une solution (construction du cache des parts au flop), puis 0,2 s pour les suivantes.
+
+**Décision.**
+1. **Verrous** : `{node_id: matrice actions × classes}`, soit le format du moteur (`Locks`). L'ordre des actions et des mains est celui de `GET /solutions/{hash}/nodes/{node_id}`. Les verrous sont validés **à la soumission** (`validate_locks`, réponse 422), pas dans le job. Il faut au moins un verrou.
+2. **Cycle de vie** : `pending` → `running` → `done` | `failed`. Le worker écrit lui-même ses transitions dans SQLite. Un résultat terminé survit donc à un arrêt de l'API.
+3. **Reprise** : au démarrage, l'API marque `failed` les jobs restés `pending` ou `running` (« interrompu par un redémarrage de l'API »). Ils ne sont pas relancés automatiquement.
+4. **Résultat complet dans le job** : totaux, gain par main, et pour chaque nœud du héros, l'équilibre, la meilleure réponse, l'écart de fréquence et l'EV gagnée pour chaque main, plus les limites du calcul (FR-018). Environ 0,5 Mo à 15bb.
+5. **Cache local au worker** : chaque process de calcul garde les tenseurs, ainsi que les `TerminalValues` des 4 dernières solutions. C'est un cache de calcul, pas un état de l'API : le perdre ne coûte que du temps.
+6. **Tenseurs incohérents** : si l'empreinte des tenseurs de l'API diffère de celle de la solution, le job échoue avec un message explicite (D-016).
+
+**Alternatives écartées.**
+- *Verrous indexés par notation de main (`{"AKs": [...]}`)* : plus lisibles, mais il faut une règle pour les mains absentes. Le front fait la conversion.
+- *Relance automatique des jobs interrompus* : on risque de relancer en boucle un job qui fait tomber le worker, et ce n'est pas utile en mono-utilisateur.
+- *Résumé dans le job et détail par route de nœud* : plus d'appels et plus de code pour un gain de taille sans enjeu dans le MVP.
+- *Threads au lieu de processus* : le calcul garde le GIL dans ses boucles Python et ralentirait toutes les requêtes.
+
+**Conséquences.** Code : `api/jobs.py`, `api/worker.py`, `api/routes/jobs.py`. Configuration : `PREFLOP_JOBS` (base des jobs, défaut `data/jobs.sqlite3`), `PREFLOP_EQUITY` (défaut `data/equity`), `PREFLOP_JOB_WORKERS` (défaut 1, environ 120 Mo de tenseurs par process). En multi-utilisateurs, le pool de processus sera remplacé par une file de tâches, sans changer les routes ni `JobStore`.
+
+## D-020 — Stratégies de vilain enregistrées : format et règle de réutilisation
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US3 (scénario 5), FR-017, D-019, issue #32
+
+**Contexte.** US3 demande de réutiliser une stratégie de vilain enregistrée « sur d'autres spots et d'autres profondeurs ». Or les actions disponibles changent d'une tranche à l'autre. À l'ouverture du BTN : F, C, A de 3 à 8bb ; F, C, R2.0, A de 10 à 15bb ; F, C, R2.0, R2.5, A de 20 à 25bb. Une matrice actions × 169 propre à un nœud ne se transpose donc pas d'elle-même.
+
+**Décision.**
+1. **Une stratégie enregistrée couvre un seul nœud**, comme le « verrouillage » du glossaire. Elle contient :
+   - un nom unique (sans tenir compte de la casse) et une description ;
+   - le vilain pour lequel elle a été construite ;
+   - ses actions **par libellé** (`F`, `C`, `R2.0`, `A`…) ;
+   - la fréquence de chaque action pour les 169 classes, dans l'ordre du moteur ;
+   - en option, son origine (empreinte et nœud).
+2. **Réutilisation par libellés exacts** : une stratégie s'applique à tout nœud de décision qui a exactement les mêmes actions, dans n'importe quel ordre (`lock_from_saved`). Ailleurs, elle est refusée avec un message qui liste les deux jeux d'actions. Le vilain enregistré n'est qu'une indication : on peut par exemple appliquer une range d'ouverture du BTN à la SB si ses actions sont identiques.
+3. **Validation dans le moteur** (`validate_saved`, `check_strategy`) : chaque main doit recevoir des fréquences finies, positives et de somme 1. Les mains fautives sont nommées, pour que l'éditeur puisse les signaler (cas limite de la spec). `validate_locks` utilise le même contrôle.
+
+**Alternatives écartées.**
+- *Correspondance par type d'action* (fold, limp, relance, all-in) : plus portable, mais il faut inventer une règle quand le nombre de relances diffère (que deviennent R2.0 et R2.5 à 5bb ?). C'est une décision de modèle discutable. On pourra l'ajouter plus tard si l'usage le demande.
+- *Une stratégie couvrant plusieurs nœuds* : rarement réutilisable telle quelle d'une profondeur à l'autre.
+
+**Conséquences.** Code : `engine/best_response/saved.py`, `api/villain_strategies.py`, `api/routes/villain_strategies.py`. Configuration : `PREFLOP_VILLAINS` (défaut `data/villain_strategies.sqlite3`). Le front (#39, #40) applique une stratégie enregistrée à un nœud via `lock_from_saved`, exposé par l'API au besoin.
+
+## D-021 — Sessions d'entraînement : tirage à la création, persistance et routes
+
+- **Date** : 2026-11-28 · **Statut** : Proposée · **Liens** : US4, FR-025, SC-008, D-008, D-017, principe VII, issue #34
+
+**Contexte.** Le plan (§ 4) prévoit une route `/training/sessions` sans en fixer la forme. SC-008 demande moins de 300 ms entre deux spots. Mesure sur la vraie bibliothèque (23 solutions) : charger toutes les solutions prend 0,66 s et tirer 20 spots 24 ms. Recharger les solutions à chaque spot dépasserait donc le budget.
+
+**Décision.**
+1. **Tirage complet à la création** : `POST /training/sessions` charge les solutions publiables dont la profondeur passe le filtre de stacks, puis tire tous les spots d'un coup avec `draw_spots`. Servir un spot ou une réponse n'est ensuite qu'une lecture SQLite. La graine est enregistrée : tirée au hasard si elle est absente, puis renvoyée, ce qui permet de rejouer une session.
+2. **Persistance dans SQLite**, comme les jobs (D-019) et les stratégies de vilain (D-020). Chaque spot est stocké avec son corrigé (stratégie et EV par action de la main), avec les indices des actions choisies. La note est recalculée par `grade` à la lecture. L'API ne garde aucun état et une session survit à un redémarrage.
+3. **Routes** : création (filtres, `count` de 1 à 100, 20 par défaut, `seed`) ; état ; `GET …/spot` pour le spot courant, **sans le corrigé** ; `POST …/answers` avec le **libellé** de l'action (`R2.0`), qui renvoie la stratégie d'équilibre, l'EV par action, la perte d'EV, la note et la meilleure action ; `GET …/summary` pour le bilan des réponses déjà données, dont chaque erreur porte l'empreinte et le nœud pour l'ouvrir dans la vue stratégie. 409 sur une session terminée, 422 sur un libellé inconnu ou des filtres sans spot.
+4. **Seuils de notation non exposés** : on garde les valeurs par défaut de D-008 et D-017.
+
+**Alternatives écartées.**
+- *Sessions en mémoire dans l'app* : plus simple, mais perdues au redémarrage et contraires au principe VII.
+- *Tirage paresseux à chaque spot* : il faudrait garder les solutions en mémoire, ou les recharger (0,7 s, hors SC-008).
+- *Réponse par indice d'action* : moins lisible, et incohérent avec les libellés de D-020.
+- *Seuils paramétrables par session* : sans usage tant que le front ne les propose pas ; facile à ajouter plus tard.
+
+**Conséquences.** Code : `api/training.py`, `api/routes/training.py`. Configuration : `PREFLOP_TRAINING` (défaut `data/training.sqlite3`). Mesure sur la vraie bibliothèque : création en 0,14 s pour 20 spots de la SB entre 10 et 15bb, puis 22 ms au pire pour un aller-retour « spot + réponse ».

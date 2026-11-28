@@ -66,6 +66,7 @@ uv run pytest                # tests
 uv run ruff check .          # lint
 uv run ruff format .         # format
 uv run mypy engine/          # typage du moteur
+uv run python -m api         # lancer l'API (variables : $PREFLOP_STORE, $PREFLOP_JOBS, $PREFLOP_EQUITY, $PREFLOP_JOB_WORKERS, $PREFLOP_VILLAINS, $PREFLOP_TRAINING ; défauts sous data/, voir D-019 à D-021)
 ```
 
 (Commandes du front à ajouter une fois le framework choisi.)

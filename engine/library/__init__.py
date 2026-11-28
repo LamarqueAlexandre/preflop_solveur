@@ -26,6 +26,14 @@ from engine.library.store import (
     SolutionSummary,
     StoreError,
 )
+from engine.library.views import (
+    NearestSolution,
+    NodeSummary,
+    TerminalView,
+    nearest_solution,
+    node_summary,
+    terminal_view,
+)
 
 __all__ = [
     "FINGERPRINT_SCHEMA",
@@ -38,16 +46,22 @@ __all__ = [
     "DepthFinished",
     "DepthStarted",
     "FileSolutionStore",
+    "NearestSolution",
     "NodeSolution",
+    "NodeSummary",
     "Progress",
     "Solution",
     "SolutionStore",
     "SolutionSummary",
     "SolveParams",
     "StoreError",
+    "TerminalView",
     "engine_version",
     "fingerprint",
+    "nearest_solution",
+    "node_summary",
     "run_batch",
     "solution_fingerprint",
     "solve",
+    "terminal_view",
 ]
