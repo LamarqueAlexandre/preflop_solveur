@@ -295,3 +295,26 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Contrôle à chaque itération* : chaque mesure de NashConv coûte environ une itération, ce qui doublerait la durée de calcul.
 
 **Conséquences.** `SolveParams` porte ces valeurs, qui restent modifiables (`engine solve --target --max-iterations --check-every`). Elles seront enregistrées avec chaque solution (#24).
+
+## D-016 — Empreinte des solutions et format de stockage
+
+- **Date** : 2026-11-28 · **Statut** : Acceptée · **Liens** : FR-012, FR-013, principes III et VII, issue #24
+
+**Contexte.** FR-012 identifie une solution par l'empreinte de sa configuration : stacks, blinds, arbre, profil de réalisation, paramètres de convergence et version du moteur. Le batch (#25) s'appuiera sur cette empreinte pour sauter les solutions déjà calculées. Elle doit donc changer dès qu'une entrée du calcul change.
+
+**Décision.**
+1. **Empreinte** = SHA-256 du JSON canonique (clés triées, sans espaces, montants toujours en flottants, entrées du profil triées) de : la config (sizings compris), l'arbre (tous ses nœuds), le **contenu** du profil (et pas seulement son nom), les paramètres de convergence (D-014, D-015), la version du moteur, **l'empreinte des tenseurs d'équité** (SHA-256 de W, E3 et E2) et une version du schéma d'empreinte (1).
+2. **Les tenseurs d'équité font partie de l'empreinte**, en plus de la liste de FR-012. Deux jeux de tenseurs différents donnent deux solutions différentes. Sans eux, un batch relancé après un nouvel `equity build` sauterait des solutions devenues fausses.
+3. **Stockage (format 1)** : un dossier `<empreinte>/` par solution.
+   - `manifest.json` contient les métadonnées, la config, l'arbre, le profil, les paramètres, l'exploitabilité et le statut. Il contient aussi le SHA-256 de `arrays.npz`, vérifié à la lecture.
+   - `arrays.npz` (compressé) contient la stratégie concaténée dans l'ordre de l'arbre, les reaches, la masse adverse, les EV et la masse des mains.
+   - L'arbre est stocké avec la solution, pour qu'une solution ancienne reste lisible même si le constructeur d'arbre change.
+4. **Les dossiers font foi.** L'index `index.sqlite` n'est qu'un cache, reconstructible par `rebuild_index`. L'écriture passe par un dossier `.tmp-*` renommé à la fin. Enregistrer une empreinte déjà présente ne réécrit rien.
+
+**Alternatives écartées.**
+- *S'en tenir à la liste de FR-012, sans les tenseurs* : le batch ne serait plus fiable après un recalcul des équités.
+- *Reconstruire l'arbre depuis la config à la lecture* : une solution ancienne deviendrait illisible ou fausse dès que `build_tree` évolue.
+- *Index SQLite comme source de vérité* : une coupure entre l'écriture des fichiers et celle de l'index laisserait un état incohérent, impossible à réparer.
+- *Une clé npz par nœud* : plus lisible, mais des centaines d'entrées par fichier.
+
+**Conséquences.** Changer la version du moteur (aujourd'hui 0.1.0) change toutes les empreintes et fait recalculer toute la bibliothèque. On ne la change donc que lorsque le calcul change. Une solution à 20bb pèse environ 2,7 Mo, soit moins de 60 Mo pour les 23 profondeurs.
