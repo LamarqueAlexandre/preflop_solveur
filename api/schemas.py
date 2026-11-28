@@ -1,8 +1,8 @@
 """Response models of the HTTP API. Amounts in bb, EV per D-007."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 PositionName = Literal["BTN", "SB", "BB"]
 ActionKindName = Literal["F", "C", "X", "R", "A"]
@@ -146,6 +146,50 @@ class BestResponseOut(BaseModel):
     hands: list[HandGainOut]
     nodes: list[HeroNodeOut]
     limitations: list[str] = Field(description="Limits of the computation (FR-018)")
+
+
+class VillainStrategyIn(BaseModel):
+    """A named strategy of one node, reusable on nodes with the same actions (FR-017, D-020)."""
+
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    description: str = Field(default="", max_length=1000)
+    actor: PositionName = Field(description="Villain the strategy was built for")
+    actions: list[str] = Field(description='Action labels, e.g. ["F", "C", "R2.0", "A"]')
+    frequencies: list[list[float]] = Field(
+        description="One row per action (same order), each giving the 169 hand classes "
+        "in engine order (as in GET /solutions/{fingerprint}/nodes/{node_id})"
+    )
+    fingerprint: str | None = Field(
+        default=None, pattern=FINGERPRINT_PATTERN, description="Solution it was built on"
+    )
+    node_id: str | None = Field(default=None, description="Node it was built on")
+
+
+class VillainStrategySummaryOut(BaseModel):
+    """A saved strategy without its frequencies (list view)."""
+
+    id: str
+    name: str
+    description: str
+    actor: PositionName
+    actions: list[str]
+    fingerprint: str | None
+    node_id: str | None
+    created_at: str
+    updated_at: str
+
+
+class VillainStrategyOut(VillainStrategySummaryOut):
+    frequencies: list[list[float]]
+
+
+class InvalidStrategyDetail(BaseModel):
+    message: str
+    hands: list[str] = Field(description="Hand classes whose frequencies are invalid")
+
+
+class InvalidStrategyOut(BaseModel):
+    detail: InvalidStrategyDetail
 
 
 class JobOut(BaseModel):

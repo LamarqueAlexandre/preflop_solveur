@@ -10,17 +10,20 @@ from fastapi import FastAPI
 
 from api.dependencies import JobRuntime
 from api.jobs import JobStore, SqliteJobStore
-from api.routes import jobs, solutions
+from api.routes import jobs, solutions, villain_strategies
+from api.villain_strategies import SqliteVillainStrategyStore, VillainStrategyStore
 from api.worker import DirectoryEquity, EquitySource
 from engine.library import FileSolutionStore, SolutionStore
 
 DEFAULT_STORE = Path("data/solutions")
 DEFAULT_JOBS = Path("data/jobs.sqlite3")
 DEFAULT_EQUITY = Path("data/equity")
+DEFAULT_VILLAINS = Path("data/villain_strategies.sqlite3")
 STORE_ENV = "PREFLOP_STORE"
 JOBS_ENV = "PREFLOP_JOBS"
 EQUITY_ENV = "PREFLOP_EQUITY"
 WORKERS_ENV = "PREFLOP_JOB_WORKERS"
+VILLAINS_ENV = "PREFLOP_VILLAINS"
 
 
 def create_app(
@@ -28,11 +31,13 @@ def create_app(
     jobs_store: JobStore | None = None,
     equity: EquitySource | None = None,
     workers: int = 1,
+    villains: VillainStrategyStore | None = None,
 ) -> FastAPI:
     """API serving ``store``; each app carries its own state, nothing is global.
 
     On-demand computations need ``jobs_store`` and ``equity``; without them the
-    job routes answer 503. Workers run in a process pool owned by the app.
+    job routes answer 503, as the villain-strategy routes without
+    ``villains``. Workers run in a process pool owned by the app.
     """
 
     @asynccontextmanager
@@ -56,17 +61,20 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.store = store
+    app.state.villains = villains
     app.include_router(solutions.router)
     app.include_router(jobs.router)
+    app.include_router(villain_strategies.router)
     return app
 
 
 def app_from_env() -> FastAPI:
-    """API configured by ``PREFLOP_STORE``, ``PREFLOP_JOBS``, ``PREFLOP_EQUITY``
-    and ``PREFLOP_JOB_WORKERS`` (defaults under ``data/``, one worker)."""
+    """API configured by ``PREFLOP_STORE``, ``PREFLOP_JOBS``, ``PREFLOP_EQUITY``,
+    ``PREFLOP_JOB_WORKERS`` and ``PREFLOP_VILLAINS`` (defaults under ``data/``, one worker)."""
     return create_app(
         FileSolutionStore(Path(os.environ.get(STORE_ENV, DEFAULT_STORE))),
         SqliteJobStore(Path(os.environ.get(JOBS_ENV, DEFAULT_JOBS))),
         DirectoryEquity(Path(os.environ.get(EQUITY_ENV, DEFAULT_EQUITY))),
         workers=int(os.environ.get(WORKERS_ENV, "1")),
+        villains=SqliteVillainStrategyStore(Path(os.environ.get(VILLAINS_ENV, DEFAULT_VILLAINS))),
     )
