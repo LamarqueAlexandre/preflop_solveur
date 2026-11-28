@@ -152,7 +152,10 @@ def _candidate(fingerprint: str, solution: Solution, filters: SpotFilters) -> _C
     def weight(node: Node) -> NDArray[np.float64]:
         assert node.actor is not None  # filtered by accepts_node
         actor = int(node.actor)
-        return values.reach_at(node.id)[actor] * values.opponent_mass_at(node.id)[actor]
+        mass: NDArray[np.float64] = (
+            values.reach_at(node.id)[actor] * values.opponent_mass_at(node.id)[actor]
+        )
+        return mass
 
     weights = np.stack([weight(node) for node in nodes])
     weights = np.where(np.isfinite(weights) & (weights > 0), weights, 0.0).ravel()
