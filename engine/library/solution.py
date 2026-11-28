@@ -9,6 +9,7 @@ of the average strategy, the one that converges and is published.
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from importlib.metadata import version
 
 import numpy as np
 from numpy.typing import NDArray
@@ -28,6 +29,12 @@ from engine.solver import (
     exploitability,
     node_values,
 )
+
+
+def engine_version() -> str:
+    """Version of the installed engine package."""
+    return version("preflop-solveur")
+
 
 Progress = Callable[[int, Exploitability], None]
 """Called after each convergence check with the iteration count and NashConv."""
@@ -70,11 +77,15 @@ class NodeSolution:
 
 @dataclass(frozen=True)
 class Solution:
-    """Equilibrium of one configuration, with how it was computed."""
+    """Equilibrium of one configuration, with how it was computed.
+
+    ``engine_version`` and ``equity_digest`` (``EquityTables.digest``) record
+    where it comes from: with the config, tree, profile and parameters, they
+    make its fingerprint (FR-012, D-016).
+    """
 
     tree: GameTree = field(repr=False)
-    profile_name: str
-    profile_version: str
+    profile: RealizationProfile = field(repr=False)
     params: SolveParams
     iterations: int
     duration_seconds: float
@@ -82,10 +93,20 @@ class Solution:
     strategy: Mapping[str, Strategy] = field(repr=False)
     values: NodeValues = field(repr=False)
     hand_mass: NDArray[np.float64] = field(repr=False)
+    engine_version: str
+    equity_digest: str
 
     @property
     def config(self) -> GameConfig:
         return self.tree.config
+
+    @property
+    def profile_name(self) -> str:
+        return self.profile.name
+
+    @property
+    def profile_version(self) -> str:
+        return self.profile.version
 
     @property
     def publishable(self) -> bool:
@@ -147,15 +168,18 @@ def solve(
     for played in average.values():
         played.flags.writeable = False
     result = node_values(tree, values, average)
+    hand_mass = values.hand_mass()
+    hand_mass.flags.writeable = False
     return Solution(
         tree=tree,
-        profile_name=profile.name,
-        profile_version=profile.version,
+        profile=profile,
         params=params,
         iterations=solver.iterations,
         duration_seconds=time.perf_counter() - start,
         exploitability=measured,
         strategy=average,
         values=result,
-        hand_mass=values.hand_mass(),
+        hand_mass=hand_mass,
+        engine_version=engine_version(),
+        equity_digest=tables.digest,
     )

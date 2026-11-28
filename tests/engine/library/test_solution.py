@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from dataclasses import replace
+from importlib.metadata import version
 
 import numpy as np
 import pytest
@@ -160,3 +161,12 @@ def test_terminal_nodes_have_no_node_view(solution: Solution) -> None:
         solution.node(terminal)
     with pytest.raises(KeyError):
         solution.node("nope")
+
+
+# --- Provenance (D-016) ------------------------------------------------------------------
+
+
+def test_solution_records_its_provenance(solution: Solution) -> None:
+    assert solution.engine_version == version("preflop-solveur")
+    assert solution.equity_digest == TABLES.digest
+    assert solution.profile == default_profile()

@@ -18,8 +18,10 @@ start of the hand, posted blinds included (D-007).
   computed triplet by triplet then cached for each flop context.
 """
 
+import hashlib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Final
 
 import numpy as np
@@ -87,6 +89,14 @@ class EquityTables:
     @property
     def n_classes(self) -> int:
         return int(self.w.shape[0])
+
+    @cached_property
+    def digest(self) -> str:
+        """SHA-256 of W, E3 and E2: identifies the tensors a solution comes from (D-016)."""
+        sha = hashlib.sha256(f"n={self.n_classes}".encode())
+        for tensor in (self.w, self.e3, self.e2):
+            sha.update(np.ascontiguousarray(tensor, dtype="<f8").tobytes())
+        return sha.hexdigest()
 
     @classmethod
     def from_arrays(cls, w: ArrayLike, e3: ArrayLike, e2: ArrayLike) -> "EquityTables":
