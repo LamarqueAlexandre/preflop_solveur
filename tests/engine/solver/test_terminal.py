@@ -333,3 +333,14 @@ def test_real_tensors_sum_to_zero() -> None:
     for node in tree:
         if node.is_terminal:
             assert sum(values.expected_values(node.id, reaches)) == pytest.approx(0.0, abs=1e-9)
+
+
+# --- Digest of the tables (D-016) ----------------------------------------------------------
+
+
+def test_digest_identifies_the_tables() -> None:
+    a = strength_tables([3.0, 1.0, 2.0])
+    assert len(a.digest) == 64
+    assert a.digest == strength_tables([3.0, 1.0, 2.0]).digest
+    assert a.digest != strength_tables([3.0, 1.0, 2.5]).digest
+    assert a.digest != strength_tables([3.0, 1.0]).digest
