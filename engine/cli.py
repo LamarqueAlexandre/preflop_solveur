@@ -6,6 +6,8 @@ engine solve --stack S [--max-iterations N] [--target P] [--check-every K]
              [--equity DIR] [--profile FILE]
 engine batch [--stacks 3-25] [--store DIR] [--max-iterations N] [--target P]
              [--check-every K] [--equity DIR] [--profile FILE]
+engine sensitivity [--stacks 5,12,20] [--modes U+,U-,E+,E-] [--delta 0.1]
+                   [--base-store DIR] [--store DIR] [--output FILE] [solving options]
 """
 
 import argparse
@@ -38,11 +40,13 @@ from engine.library import (
     run_batch,
     solve,
 )
+from engine.library.sensitivity import MODES, render_report, run_sensitivity
 from engine.realization import ProfileError, RealizationProfile, default_profile, load_profile
 from engine.solver import EquityTables, Exploitability
 
 DEFAULT_SEED = 20261126
 DEFAULT_STORE = Path("data") / "solutions"
+DEFAULT_SENSITIVITY_STORE = Path("data") / "sensitivity"
 
 
 def _positive_int(text: str) -> int:
@@ -81,6 +85,14 @@ def _stack_list(text: str) -> list[float]:
         return parse_stacks(text)
     except ValueError as error:
         raise argparse.ArgumentTypeError(str(error)) from None
+
+
+def _mode_list(text: str) -> list[str]:
+    modes = [mode.strip() for mode in text.split(",")]
+    unknown = [mode for mode in modes if mode not in MODES]
+    if not modes or unknown:
+        raise argparse.ArgumentTypeError(f"modes must be among {', '.join(MODES)}, got {text!r}")
+    return modes
 
 
 def _class_list(text: str) -> list[int]:
@@ -268,6 +280,36 @@ def _batch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sensitivity(args: argparse.Namespace) -> int:
+    inputs = _load_inputs(args, args.stacks)
+    if inputs is None:
+        return 1
+    profile, _, tables = inputs
+    print(
+        f"Sensitivity of {', '.join(f'{s:g}bb' for s in args.stacks)} to profile "
+        f"{profile.name} {profile.version}: modes {', '.join(args.modes)}, delta {args.delta:g}"
+    )
+    results = run_sensitivity(
+        args.stacks,
+        args.modes,
+        args.delta,
+        tables,
+        profile,
+        _params(args),
+        FileSolutionStore(args.base_store),
+        FileSolutionStore(args.store),
+        _print_batch_event,
+    )
+    report = render_report(results, format_class)
+    print()
+    print(report)
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(report, encoding="utf-8")
+        print(f"Report written to {args.output}")
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="engine", description="Expresso 3-max preflop engine.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -307,6 +349,28 @@ def _parser() -> argparse.ArgumentParser:
     )
     _add_solving_options(batch_parser)
     batch_parser.set_defaults(handler=_batch)
+
+    sensitivity = commands.add_parser(
+        "sensitivity", help="compare the equilibrium under variants of the realization profile"
+    )
+    sensitivity.add_argument(
+        "--stacks", type=_stack_list, default=[5.0, 12.0, 20.0], help="depths (default: 5,12,20)"
+    )
+    sensitivity.add_argument(
+        "--modes", type=_mode_list, default=list(MODES), help=f"among {','.join(MODES)}"
+    )
+    sensitivity.add_argument(
+        "--delta", type=_positive_float, default=0.1, help="factor variation (default 0.1)"
+    )
+    sensitivity.add_argument(
+        "--base-store", type=Path, default=DEFAULT_STORE, help="store of the base solutions"
+    )
+    sensitivity.add_argument(
+        "--store", type=Path, default=DEFAULT_SENSITIVITY_STORE, help="store of the variants"
+    )
+    sensitivity.add_argument("--output", type=Path, default=None, help="Markdown report file")
+    _add_solving_options(sensitivity)
+    sensitivity.set_defaults(handler=_sensitivity)
     return parser
 
 
