@@ -242,3 +242,53 @@ def test_invalid_stack_lists_are_rejected(text: str) -> None:
     with pytest.raises(SystemExit) as error:
         main(["batch", "--stacks", text])
     assert error.value.code != 0
+
+
+# --- engine sensitivity ------------------------------------------------------------------
+
+
+def test_sensitivity_writes_a_markdown_report(
+    synthetic_equity: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output = tmp_path / "report.md"
+    code = main(
+        [
+            "sensitivity",
+            "--stacks",
+            "3",
+            "--modes",
+            "E+,U-",
+            "--equity",
+            str(synthetic_equity),
+            "--base-store",
+            str(tmp_path / "solutions"),
+            "--store",
+            str(tmp_path / "sensitivity"),
+            "--max-iterations",
+            "2",
+            "--check-every",
+            "1",
+            "--output",
+            str(output),
+        ]
+    )
+    assert code == 0
+    report = output.read_text(encoding="utf-8")
+    assert "## 3bb" in report and "E+" in report and "U-" in report
+    assert "## 3bb" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["sensitivity", "--modes", "X+"],
+        ["sensitivity", "--modes", ""],
+        ["sensitivity", "--delta", "0"],
+        ["sensitivity", "--delta", "abc"],
+        ["sensitivity", "--stacks", "5-3"],
+    ],
+)
+def test_sensitivity_invalid_arguments_are_rejected(arguments: list[str]) -> None:
+    with pytest.raises(SystemExit) as error:
+        main(arguments)
+    assert error.value.code != 0
