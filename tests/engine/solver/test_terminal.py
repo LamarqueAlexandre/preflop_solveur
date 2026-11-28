@@ -344,3 +344,13 @@ def test_digest_identifies_the_tables() -> None:
     assert a.digest == strength_tables([3.0, 1.0, 2.0]).digest
     assert a.digest != strength_tables([3.0, 1.0, 2.5]).digest
     assert a.digest != strength_tables([3.0, 1.0]).digest
+
+
+def test_terminal_values_expose_what_they_were_built_from() -> None:
+    tree = build_tree(GameConfig.equal_stacks(12.0))
+    tables = strength_tables([3.0, 1.0, 2.0])
+    profile = default_profile()
+    values = TerminalValues(tree, tables, profile)
+    assert values.tree is tree
+    assert values.profile is profile
+    assert values.equity_digest == tables.digest
