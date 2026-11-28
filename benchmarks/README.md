@@ -80,3 +80,17 @@ Le script lance DCFR (paramètres de D-014, profil de réalisation par défaut) 
 | | | 20bb | 1,28 % | 0,27 % | 0,061 % | 0,0090 % | 0,0024 % | 641 s |
 
 Le seuil de 0,5 % est atteint en moins de 100 itérations à 20bb, soit environ 1 minute. NashConv est divisé par environ 4 quand le nombre d'itérations double. La décroissance est donc proche de 1/T², bien plus rapide que la borne théorique en 1/√T.
+
+## Bibliothèque complète, SC-006 et SC-001 (`bench_library.py`)
+
+Issue #26. Il faut les tenseurs d'équité dans `data/equity/`. Durée : environ 30 minutes. Le rapport complet se trouve dans [docs/notes/bibliotheque-sc006.md](../docs/notes/bibliotheque-sc006.md).
+
+```bash
+uv run python benchmarks/bench_library.py
+```
+
+Le script relève la machine, résout une profondeur par tranche et extrapole, puis lance le batch sur la grille 3–25bb dans `data/solutions/`. Il relit ensuite chaque solution et recalcule son NashConv à partir de la stratégie stockée (SC-001). Paramètres : D-014, D-015, profil par défaut 1.0.0.
+
+| Date | Machine | Python / NumPy / BLAS | Extrapolation | Durée totale (23 solutions) | Itérations | NashConv max | Non conformes |
+|---|---|---|---|---|---|---|---|
+| 2026-11-28 | Intel Core i5-13420H (12 cœurs logiques), 15,7 Gio, Windows 11 | 3.12.10 / 2.5.5 / scipy-openblas 0.3.34 | 17 min 25 s | 25 min 43 s (limite 10 h) | 100 à 300 | 0,096 % | 0 |
