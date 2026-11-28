@@ -165,6 +165,19 @@ class TerminalValues:
     def n_classes(self) -> int:
         return self._tables.n_classes
 
+    @property
+    def tree(self) -> GameTree:
+        return self._tree
+
+    @property
+    def profile(self) -> RealizationProfile:
+        return self._profile
+
+    @property
+    def equity_digest(self) -> str:
+        """``EquityTables.digest`` of the tables used (D-016)."""
+        return self._tables.digest
+
     def hand_mass(self) -> Tensor:
         """Number of combo triplets in which a player holds each class (W summed)."""
         return self._tables.w.sum(axis=(1, 2))

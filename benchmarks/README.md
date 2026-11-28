@@ -94,3 +94,22 @@ Le script relève la machine, résout une profondeur par tranche et extrapole, p
 | Date | Machine | Python / NumPy / BLAS | Extrapolation | Durée totale (23 solutions) | Itérations | NashConv max | Non conformes |
 |---|---|---|---|---|---|---|---|
 | 2026-11-28 | Intel Core i5-13420H (12 cœurs logiques), 15,7 Gio, Windows 11 | 3.12.10 / 2.5.5 / scipy-openblas 0.3.34 | 17 min 25 s | 25 min 43 s (limite 10 h) | 100 à 300 | 0,096 % | 0 |
+
+## Meilleure réponse contre vilains verrouillés (`bench_best_response.py`)
+
+Issue #27. Il faut les tenseurs d'équité dans `data/equity/` et la bibliothèque dans `data/solutions/` (`engine batch`).
+
+```bash
+uv run python benchmarks/bench_best_response.py
+```
+
+Héros SB. Le nœud racine du BTN est verrouillé soit sur son équilibre (verrouillage neutre), soit sur sa plus grosse action sous l'all-in, jouée avec 100 % des mains. « À froid » inclut la construction des valeurs terminales de la solution (cache des parts au flop). « À chaud » les réutilise (meilleur de 3 essais). SC-005 exige moins de 5 s, l'objectif est moins de 1 s.
+
+| Date | Machine | Python / NumPy | Profondeur | À froid | À chaud | EV gagnée SB (verrouillage 100 %) |
+|---|---|---|---|---|---|---|
+| 2026-11-28 | Intel Core i5-13420H, Windows 11 | 3.12.10 / 2.5.5 | 5bb (C 100 %) | 0,48 s | 0,045 s | +0,147 bb/main |
+| | | | 12bb (R2.0 100 %) | 1,06 s | 0,132 s | +0,705 bb/main |
+| | | | 20bb (R2.5 100 %) | 1,93 s | 0,272 s | +1,331 bb/main |
+| | | | 25bb (R2.5 100 %) | 1,91 s | 0,257 s | +1,538 bb/main |
+
+Avec un verrouillage neutre (BTN à l'équilibre), l'EV gagnée vaut 0 à 0,0006 bb/main : c'est le terme de la SB dans NashConv.
