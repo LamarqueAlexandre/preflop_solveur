@@ -125,18 +125,20 @@ def test_other_parameters_give_new_solutions(tmp_path: Path) -> None:
 
 def test_a_solution_above_the_threshold_is_marked_non_conforming(tmp_path: Path) -> None:
     store = FileSolutionStore(tmp_path)
+    (good,) = batch(store, TWO_DEPTHS[:1]).entries
+    assert good.summary.publishable
     report = batch(
         store,
-        (GameConfig.equal_stacks(5.0), GameConfig.equal_stacks(20.0)),
+        (GameConfig.equal_stacks(20.0),),
         params=SolveParams(max_iterations=1, check_every=1),
     )
-    rough = report.entries[1]
+    (rough,) = report.entries
     assert rough.status is BatchStatus.SOLVED
     assert not rough.summary.publishable
     assert rough.summary.nash_conv_percent >= 0.5
     assert report.non_conforming == (rough,)
     published = [s.fingerprint for s in store.list_solutions(publishable_only=True)]
-    assert rough.summary.fingerprint not in published
+    assert published == [good.summary.fingerprint]
     assert store.contains(rough.summary.fingerprint)
 
 

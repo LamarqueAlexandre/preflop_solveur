@@ -111,6 +111,10 @@ class SolutionStore(ABC):
         """Whether a solution with this fingerprint is stored."""
 
     @abstractmethod
+    def summary(self, fingerprint: str) -> SolutionSummary:
+        """Summary of a stored solution; ``KeyError`` if absent."""
+
+    @abstractmethod
     def list_solutions(self, publishable_only: bool = False) -> list[SolutionSummary]:
         """Summaries sorted by stacks."""
 
@@ -294,6 +298,9 @@ class FileSolutionStore(SolutionStore):
             engine_version=str(manifest["engine_version"]),
             equity_digest=str(manifest["equity_digest"]),
         )
+
+    def summary(self, fingerprint: str) -> SolutionSummary:
+        return _summary(_summary_row(self._read_manifest(fingerprint)))
 
     def list_solutions(self, publishable_only: bool = False) -> list[SolutionSummary]:
         query = f"SELECT {_COLUMNS} FROM solutions"

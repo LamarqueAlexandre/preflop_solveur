@@ -1,5 +1,15 @@
-"""Solutions of the configuration grid: solving, fingerprint and store (later: batch)."""
+"""Solutions of the configuration grid: solving, fingerprint, store and batch."""
 
+from engine.library.batch import (
+    BatchEntry,
+    BatchEvent,
+    BatchReport,
+    BatchStatus,
+    ConvergenceChecked,
+    DepthFinished,
+    DepthStarted,
+    run_batch,
+)
 from engine.library.fingerprint import FINGERPRINT_SCHEMA, fingerprint, solution_fingerprint
 from engine.library.solution import (
     NodeSolution,
@@ -20,6 +30,13 @@ from engine.library.store import (
 __all__ = [
     "FINGERPRINT_SCHEMA",
     "STORE_FORMAT_VERSION",
+    "BatchEntry",
+    "BatchEvent",
+    "BatchReport",
+    "BatchStatus",
+    "ConvergenceChecked",
+    "DepthFinished",
+    "DepthStarted",
     "FileSolutionStore",
     "NodeSolution",
     "Progress",
@@ -30,6 +47,7 @@ __all__ = [
     "StoreError",
     "engine_version",
     "fingerprint",
+    "run_batch",
     "solution_fingerprint",
     "solve",
 ]
