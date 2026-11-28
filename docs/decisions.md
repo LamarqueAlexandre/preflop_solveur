@@ -318,3 +318,21 @@ Le budget accepté pour la construction du tenseur est **une nuit** (environ 8 h
 - *Une clé npz par nœud* : plus lisible, mais des centaines d'entrées par fichier.
 
 **Conséquences.** Changer la version du moteur (aujourd'hui 0.1.0) change toutes les empreintes et fait recalculer toute la bibliothèque. On ne la change donc que lorsque le calcul change. Une solution à 20bb pèse environ 2,7 Mo, soit moins de 60 Mo pour les 23 profondeurs.
+
+## D-017 — Entraînement : tirage des spots, action mixte et score
+
+- **Date** : 2026-11-28 · **Statut** : Acceptée · **Liens** : US4, FR-025, D-008, issue #33
+
+**Contexte.** D-008 fixe les seuils de notation et dit qu'« une action à fréquence d'équilibre non nulle compte comme correcte ». Or la stratégie moyenne du DCFR donne des fréquences minuscules (de l'ordre de 0,001) à presque toutes les actions : prise au pied de la lettre, la règle compterait presque tout comme juste. US4 ne dit pas non plus comment tirer les spots ni comment calculer le score.
+
+**Décision.**
+1. **Action mixte** : une action jouée **au moins 1 %** du temps à l'équilibre (seuil `mixed_frequency`, paramétrable) est notée « meilleure action ». La perte d'EV affichée reste la perte réelle, par exemple 0,02bb, et sert au bilan.
+2. **Tirage** : une profondeur est tirée uniformément parmi celles qui respectent les filtres. Un couple (nœud, main) du héros est ensuite tiré avec sa fréquence réelle dans le jeu à l'équilibre : poids = reach du héros × masse des mains adverses encore possibles. Le combo est tiré uniformément dans la classe. Le tirage est reproductible avec une graine.
+3. **Score** : part des réponses notées « meilleure action ».
+
+**Alternatives écartées.**
+- *Fréquence strictement non nulle* : sans effet, à cause du bruit de convergence.
+- *Nœuds tirés uniformément* : surreprésente des lignes rares, comme les 4-bets après un limp-relance.
+- *Score pondéré (1 / 0,5 / 0)* : moins lisible. La perte d'EV totale et moyenne mesure déjà la gravité.
+
+**Conséquences.** Le tirage réaliste produit beaucoup de spots faciles (des folds évidents). Un filtre « exclure les spots triviaux » pourra être ajouté plus tard. Code : `engine/training/`.
