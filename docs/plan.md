@@ -156,7 +156,7 @@ Une action dont la fréquence d'équilibre est non nulle compte comme correcte (
 | `POST /best-response` → job (202) | lance une meilleure réponse ; verrous validés à la soumission (D-019) |
 | `GET /jobs/{id}` | état et résultat d'un job |
 | `/villain-strategies` (CRUD) | stratégies de vilain enregistrées (FR-017) ; un nœud, actions par libellé (D-020) |
-| `/training/sessions` | sessions d'entraînement |
+| `/training/sessions` | sessions d'entraînement : création (filtres, graine), spot courant, réponse par libellé, bilan ; spots tirés à la création (D-021) |
 
 - Les calculs à la demande sont des jobs (principe VII). Pour le MVP, ils tournent dans un exécuteur de processus, et leur état est persisté dans SQLite, pas en mémoire.
 - Les types TypeScript du front sont générés depuis le schéma OpenAPI (`openapi-typescript`).
