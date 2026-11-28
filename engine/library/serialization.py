@@ -14,7 +14,7 @@ from engine.game.config import GameConfig, SizingTable, TrancheSizings
 from engine.game.tree import Action, ActionKind, GameTree, Node, Position, TerminalKind
 from engine.library.solution import SolveParams
 from engine.realization.profile import FORMAT_VERSION as PROFILE_FORMAT_VERSION
-from engine.realization.profile import RealizationProfile, parse_profile
+from engine.realization.profile import RealizationKey, RealizationProfile, parse_profile
 from engine.solver import DCFRParams, Exploitability
 
 Data = dict[str, Any]
@@ -139,7 +139,9 @@ def tree_from_data(config: GameConfig, data: list[Data]) -> GameTree:
 def profile_to_data(profile: RealizationProfile) -> Data:
     """The profile file format (``parse_profile`` reads it back), entries sorted."""
     entries: list[Data] = []
-    contexts = [(key, None, factor) for key, factor in profile.factors.items()]
+    contexts: list[tuple[RealizationKey, str | None, float]] = [
+        (key, None, factor) for key, factor in profile.factors.items()
+    ]
     contexts += [(key, cat, factor) for (key, cat), factor in profile.category_factors.items()]
     for key, category, factor in contexts:
         entry: Data = {
